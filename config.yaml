@@ -1,6 +1,6 @@
-baseURL: http://example.org/
+baseURL: https://valerios-project.netlify.app/
 languageCode: en-us
-title: Forty
+title: Valerio's Portfolio Website
 theme: forty
 googleAnalytics: ''
 disqusShortname: ''
@@ -8,24 +8,24 @@ params:
   banner:
     buttonText: Get Started
     subtitle: |-
-      A RESPONSIVE SITE TEMPLATE DESIGNED BY HTML5 UP
-      AND RELEASED UNDER THE CREATIVE COMMONS.
-    title: Hi, my name is Forty
+   #   A RESPONSIVE SITE TEMPLATE DESIGNED BY HTML5 UP
+   #   AND RELEASED UNDER THE CREATIVE COMMONS.
+    title: Hi, my name is Valerio Dussizza and I'm currently a Masters student at London Business School.
   blog: {}
   contact:
     address:
-      - city: City, ST 00000
-        country: Country
-        street: Street
-        title: Address
-    buttonClear: Clear
-    buttonSend: Send message
+      - city: London
+        country: United Kingdom
+    #    street: Street
+     #   title: Address
+ #   buttonClear: Clear
+  #  buttonSend: Send message
     email:
-      - email: example@domain.com
+      - email: dussizzav@gmail.com
         title: Email
     enable: yes
     phone:
-      - phone: (000) 000-0000 x1234
+      - phone: +44 7340 762704
         title: Phone
   custom_css: []
   custom_js: []
@@ -42,21 +42,21 @@ params:
         text: 'Design: '
         url: https://www.html5up.net
     social:
-      - icon: fa-twitter
-        label: Twitter
-        url: https://www.twitter.com
-      - icon: fa-facebook
-        label: Facebook
-        url: https://www.facebook.com
-      - icon: fa-instagram
-        label: Instagram
-        url: https://www.instagram.com
-      - icon: fa-github
-        label: GitHub
-        url: https://www.github.com
+#      - icon: fa-twitter
+ #       label: Twitter
+  #      url: https://www.twitter.com
+#      - icon: fa-facebook
+ #       label: Facebook
+  #      url: https://www.facebook.com
+#      - icon: fa-instagram
+ #       label: Instagram
+  #      url: https://www.instagram.com
+  #    - icon: fa-github
+   #     label: GitHub
+    #    url: https://www.github.com
       - icon: fa-linkedin
         label: LinkedIn
-        url: https://www.linkedin.com
+        url: https://www.linkedin.com/in/vdussizza/
   image: ''
   name: Your name
   navigation:
@@ -71,10 +71,10 @@ params:
         url: '#'
       - name: Blogs
         url: blogs
-      - name: Generic Blog
-        url: blogs/ipsum
-      - name: Elements
-        url: elements.html
+  #    - name: Generic Blog
+   #     url: blogs/ipsum
+    #  - name: Elements
+     #   url: elements.html
     menu: Menu
     subtitle: By HTML5 Up
     title: Forty
@@ -82,12 +82,12 @@ params:
     enable: yes
     showcase:
       - image: pic01.jpg
-        subtitle: Ipsum Dolor Sit Amet
-        title: Aliquam
+        subtitle: Learn more about me and where I'm from!
+        title: International background
         url: blogs/aliquam
       - image: pic02.jpg
-        subtitle: Feugiat Amet Tempus
-        title: Tempus
+        subtitle: What I like to do in my free time
+        title: Hobbies
         url: blogs/tempus
       - image: pic03.jpg
         subtitle: Lorem Etiam Nullam
