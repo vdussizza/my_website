@@ -11,4 +11,4 @@ slug: bio
 title: Biography
 ---
 
-hi my name is Valerio
+I'm Valerio! I'm currently a Masters in Financial Analysis student at London Business School. I completely my undergraduate studies in Law at King's College London and so I've been in London for quite a while. Before that, I lived in a variety of places which you can read more about in the "International Background" tab on the home page of this website. My parents and my younger sister live in Milan and I visit them when I can. 
