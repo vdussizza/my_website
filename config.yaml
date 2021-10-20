@@ -6,7 +6,7 @@ googleAnalytics: ''
 disqusShortname: ''
 params:
   banner:
-    buttonText: Get Started
+ #   buttonText: Get Started
     subtitle: |-
    #   A RESPONSIVE SITE TEMPLATE DESIGNED BY HTML5 UP
    #   AND RELEASED UNDER THE CREATIVE COMMONS.
@@ -84,7 +84,7 @@ params:
       - image: biography.jpg
         subtitle: The story of my life!
         title: Biography
-        url: blogs/biography
+        url: blogs/bio
       - image: cooking.jpg
         subtitle: What I like to do in my free time
         title: Hobbies
