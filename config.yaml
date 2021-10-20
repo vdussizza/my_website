@@ -106,8 +106,8 @@ params:
         title: 
         url: blogs/
   two:
-    buttonText: Get Started
-    enable: yes
+ #   buttonText: Get Started
+  #  enable: yes
     subtitle: "Thanks for visiting my page! I hope you enjoyed learning more about me and looking at some of the work I've completed in my data analytics course at London Business School."
     title: Goodbye!
-    url: blogs
+ #   url: blogs
