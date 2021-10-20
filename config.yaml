@@ -81,30 +81,30 @@ params:
   tiles:
     enable: yes
     showcase:
-      - image: pic01.jpg
-        subtitle: Learn more about me and where I'm from!
-        title: International background
-        url: blogs/aliquam
-      - image: pic02.jpg
+      - image: biography.jpg
+        subtitle: The story of my life!
+        title: Biography
+        url: blogs/biography
+      - image: cooking.jpg
         subtitle: What I like to do in my free time
         title: Hobbies
-        url: blogs/tempus
-      - image: pic03.jpg
-        subtitle: Lorem Etiam Nullam
-        title: Magna
-        url: blogs/magna
-      - image: pic04.jpg
-        subtitle: Nisl Sed Aliquam
-        title: Ipsum
-        url: blogs/ipsum
-      - image: pic05.jpg
-        subtitle: Ipsum Dolor Sit Amet
-        title: Consequat
-        url: blogs/ipsum
-      - image: pic06.jpg
-        subtitle: Feugiat Amet Tempus
-        title: Etiam
-        url: blogs/ipsum
+        url: blogs/hobbies
+      - image: earth.jpg
+        subtitle: Learn more about me and where I'm from!
+        title: International background
+        url: blogs/background
+      - image: .jpg
+        subtitle: 
+        title: 
+        url: blogs/
+      - image: .jpg
+        subtitle: 
+        title: 
+        url: blogs/
+      - image: .jpg
+        subtitle:
+        title: 
+        url: blogs/
   two:
     buttonText: Get Started
     enable: yes
