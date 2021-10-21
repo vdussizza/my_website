@@ -94,9 +94,9 @@ params:
         title: International background
         url: blogs/background
       - image: .jpg
-        subtitle: 
-        title: 
-        url: blogs/
+        subtitle: Data Analytics
+        title: Project 2
+        url: blogs/hw2
       - image: .jpg
         subtitle: 
         title: 
