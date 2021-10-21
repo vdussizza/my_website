@@ -93,7 +93,7 @@ params:
         subtitle: Learn more about me and where I'm from!
         title: International background
         url: blogs/background
-      - image: .jpg
+      - image: biography.jpg
         subtitle: Data Analytics
         title: Project 2
         url: blogs/hw2
