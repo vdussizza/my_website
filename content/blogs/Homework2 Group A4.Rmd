@@ -1,0 +1,824 @@
+---
+
+categories:  
+- ""    #the front matter should be like the one found in, e.g., blog2.md. It cannot be like the normal Rmd we used
+- ""
+date: "`r Sys.Date()`"
+description: Data # the title that will show up once someone gets to this page
+draft: false
+image: spices.jpg # save picture in \static\img\blogs. Acceptable formats= jpg, jpeg, or png . Your iPhone pics wont work
+
+keywords: ""
+slug: hw2 # slug is the shorthand URL address... no spaces plz
+title: Project 2
+
+author: "Group A4: Maggie, Architt, Valerio, Sam, Daria, Yan Xin"
+
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+
+
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+
+```{r load-libraries, include=FALSE}
+library(tidyverse) # Load ggplot2, dplyr, and all the other tidyverse packages
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(here)
+library(skimr)
+library(janitor)
+library(httr)
+library(readxl)
+library(vroom)
+library(tidyquant)
+library(rvest)
+library(scales)
+library(lubridate)
+library(ggtext)
+```
+
+
+
+# Climate change and temperature anomalies 
+
+
+If we wanted to study climate change, we can find data on the *Combined Land-Surface Air and Sea-Surface Water Temperature Anomalies* in the Northern Hemisphere at [NASA's Goddard Institute for Space Studies](https://data.giss.nasa.gov/gistemp). The [tabular data of temperature anomalies can be found here](https://data.giss.nasa.gov/gistemp/tabledata_v4/NH.Ts+dSST.txt)
+
+To define temperature anomalies you need to have a reference, or base, period which NASA clearly states that it is the period between 1951-1980.
+
+Run the code below to load the file:
+
+```{r weather_data, cache=TRUE}
+
+weather <-
+  read_csv(
+    "https://data.giss.nasa.gov/gistemp/tabledata_v4/NH.Ts+dSST.csv",
+    skip = 1,
+    na = "***"
+  )
+
+glimpse(weather)
+```
+
+Notice that, when using this function, we added two options: `skip` and `na`.
+
+1. The `skip=1` option is there as the real data table only starts in Row 2, so we need to skip one row. 
+1. `na = "***"` option informs R how missing observations in the spreadsheet are coded. When looking at the spreadsheet, you can see that missing data is coded as "***". It is best to specify this here, as otherwise some of the data is not recognized as numeric data.
+
+Once the data is loaded, notice that there is a object titled `weather` in the `Environment` panel. If you cannot see the panel (usually on the top-right), go to `Tools` > `Global Options` > `Pane Layout` and tick the checkbox next to `Environment`. Click on the `weather` object, and the dataframe will pop up on a seperate tab. Inspect the dataframe.
+
+For each month and year, the dataframe shows the deviation of temperature from the normal (expected). Further the dataframe is in wide format. 
+
+You have two objectives in this section:
+
+1. Select the year and the twelve month variables from the `weather` dataset. We do not need the others (J-D, D-N, DJF, etc.) for this assignment. Hint: use `select()` function.
+
+1. Convert the dataframe from wide to 'long' format. Hint: use `gather()` or `pivot_longer()` function. Name the new dataframe as `tidyweather`, name the variable containing the name of the month as `month`, and the temperature deviation values as `delta`.
+
+
+```{r tidyweather}
+weather_months = weather %>%  #Selecting the months and yr 
+  select(1:13)
+
+glimpse(weather_months) #viewing variables
+
+tidyweather <- weather_months %>% #Creating a new df, by chaning weather_months to long format and naming the columns month and delta
+  pivot_longer(cols = 2:13,
+               names_to = "Month",
+               values_to = "delta")
+
+glimpse(tidyweather)  #viewing new variables
+
+```
+
+
+Inspect your dataframe. It should have three variables now, one each for 
+
+1. year, 
+1. month, and 
+1. delta, or temperature deviation.
+
+## Plotting Information
+
+Let us plot the data using a time-series scatter plot, and add a trendline. To do that, we first need to create a new variable called `date` in order to ensure that the `delta` values are plot chronologically. 
+
+
+> In the following chunk of code, I used the `eval=FALSE` argument, which does not run a chunk of code; I did so that you can knit the document before tidying the data and creating a new dataframe `tidyweather`. When you actually want to run this code and knit your document, you must delete `eval=FALSE`, **not just here but in all chunks were `eval=FALSE` appears.**
+
+
+```{r scatter_plot}
+tidyweather <- tidyweather %>%
+  mutate(date = ymd(paste(as.character(Year), Month, "1")),
+         month = month(date),
+         year = year(date))
+
+glimpse(tidyweather)
+
+ggplot(tidyweather, aes(x = date, y = delta)) +
+  geom_point() +
+  geom_smooth(color = "red") +
+  theme_bw() +
+  labs (title = "Weather Anomalies")
+
+```
+
+Is the effect of increasing temperature more pronounced in some months? Use `facet_wrap()` to produce a seperate scatter plot for each month, again with a smoothing line. Your chart should human-readable labels; that is, each month should be labeled "Jan", "Feb", "Mar" (full or abbreviated month names are fine), not `1`, `2`, `3`. 
+
+```{r facet_wrap, echo=FALSE}
+
+glimpse(tidyweather)  #viewing variable
+
+tidyweather %>%  #mutating tidy weather to create 12 plots ordered in ranking
+  mutate(Month  = factor(
+    Month,
+    levels = c(
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    )
+  )) %>%
+  ggplot(., aes(x = date, y = delta)) +
+  geom_point() + 
+  geom_smooth(color = "red") +  #adding trend line
+  theme_bw() +
+  facet_wrap(~ Month) +  #creates 12 plots
+  labs (title = "Weather Anomalies",  #adding titles to graph
+        xlab = "Date",
+        ylab = "Delta") 
+  
+```
+
+
+
+It is sometimes useful to group data into different time periods to study historical data. For example, we often refer to decades such as 1970s, 1980s, 1990s etc. to refer to a period of time. NASA calcuialtes a temperature anomaly, as difference form the base periof of 1951-1980. The code below creates a new data frame called `comparison` that groups data in five time periods: 1881-1920, 1921-1950, 1951-1980, 1981-2010 and 2011-present. 
+
+We remove data before 1800 and before using `filter`. Then, we use the `mutate` function to create a new variable `interval` which contains information on which period each observation belongs to. We can assign the different periods using `case_when()`.
+
+
+```{r intervals}
+
+comparison <- tidyweather %>%
+  filter(Year >= 1881) %>%     #remove years prior to 1881
+  #create new variable 'interval', and assign values based on criteria below:
+  mutate(
+    interval = case_when(
+      Year %in% c(1881:1920) ~ "1881-1920",
+      Year %in% c(1921:1950) ~ "1921-1950",
+      Year %in% c(1951:1980) ~ "1951-1980",
+      Year %in% c(1981:2010) ~ "1981-2010",
+      TRUE ~ "2011-present"
+    ))
+
+```
+
+Inspect the `comparison` dataframe by clicking on it in the `Environment` pane.
+
+Now that we have the `interval` variable, we can create a density plot to study the distribution of monthly deviations (`delta`), grouped by the different time periods we are interested in. Set `fill` to `interval` to group and colour the data by different time periods.
+
+```{r density_plot}
+
+ggplot(comparison, aes(x=delta, fill=interval))+
+  geom_density(alpha=0.2) +   #density plot with transparency set to 20%
+  theme_bw() +                #theme
+  labs (
+    title = "Density Plot for Monthly Temperature Anomalies",
+    y     = "Density"         #changing y-axis label to sentence case
+  )
+
+```
+
+
+So far, we have been working with monthly anomalies. However, we might be interested in average annual anomalies. We can do this by using `group_by()` and `summarise()`, followed by a scatter plot to display the result. 
+
+```{r averaging}
+
+#creating yearly averages
+average_annual_anomaly <- tidyweather %>%
+  group_by(Year) %>%   #grouping data by Year
+  
+  # creating summaries for mean delta
+  # use `na.rm=TRUE` to eliminate NA (not available) values
+  summarise(annual_average_delta = mean(delta), na.rm = TRUE)
+
+#plotting the data:
+ggplot(average_annual_anomaly, aes(x = Year, y = annual_average_delta)) +
+  geom_point() +
+  
+  #Fit the best fit line, using LOESS method
+  geom_smooth() +
+  
+  #change to theme_bw() to have white background + black frame around plot
+  theme_bw() +
+  labs (title = "Average Yearly Anomaly",
+        y     = "Average Annual Delta")  #adding titles and y lab
+
+
+```
+
+
+## Confidence Interval for `delta`
+
+[NASA points out on their website](https://earthobservatory.nasa.gov/world-of-change/decadaltemp.php) that 
+
+> A one-degree global change is significant because it takes a vast amount of heat to warm all the oceans, atmosphere, and land by that much. In the past, a one- to two-degree drop was all it took to plunge the Earth into the Little Ice Age.
+
+Your task is to construct a confidence interval for the average annual delta since 2011, both using a formula and using a bootstrap simulation with the `infer` package. Recall that the dataframe `comparison` has already grouped temperature anomalies according to time intervals; we are only interested in what is happening  between 2011-present.
+
+
+```{r, calculate_CI_using_formula, eval=FALSE}
+
+t.score = qt(0.25, df = 1, lower.tail = F)  #Finding the t value for a 95% CI
+n = 128  #No. of detla values
+formula_ci <- comparison %>%
+  filter(interval == "2011-present") %>%  #selecting only the most recent data set
+  dplyr::summarise(
+    Average = mean(delta, na.rm = TRUE),  #Finding summary statisitcs to compute the CI
+    STDEV = sd(delta, na.rm = TRUE),
+    STE = STDEV / sqrt(n),
+    me = qt(0.975, n - 1) * STE,
+    CI = c(Average - me, Average + me)
+  )
+
+# calculate summary statistics for temperature deviation (delta)
+# calculate mean, SD, count, SE, lower/upper 95% CI
+# what dplyr verb will you use?
+
+#print out formula_CI
+formula_ci  #Outputs the CI
+```
+
+
+```{r, calculate_CI_using_bootstrap}
+
+# use the infer package to construct a 95% CI for delta
+library(infer)
+
+Average <- comparison %>%
+  filter(interval == "2011-present") %>%  #selecting only the most recent data set
+  dplyr::summarise(
+    Average = mean(delta, na.rm = TRUE))
+
+dist <- comparison %>%
+  filter(interval == "2011-present") %>%
+  specify(response = delta) %>%
+  generate(reps = 1000, type = "bootstrap") %>%  #Generating 1000 repetition bootstrap
+  calculate(stat = "mean")
+
+dist %>%
+  get_confidence_interval(point_estimate = Average,  #using this to find a CI
+                          level = 0.975,
+                          type = "se")
+
+dist %>% 
+  visualize() +
+  shade_p_value(obs_stat = Average, direction = "two-sided") #Creating a plot to show the distrubution 
+
+
+```
+
+
+> What is the data showing us? Please type your answer after (and outside!) this blockquote. You have to explain what you have done, and the interpretation of the result. One paragraph max, please!
+
+#Following a reorganisation of the data to long format, we created a time series scatter plot for each month showing the change in temperature from 1880 to present day. It is clear for all months the temperatures have risen, however the temperature change is greater during the winter months. This temperature increase was further backed up by the average annual anomaly plot. Then we found the 95% CI for the deltas from 2011-present, using both the bootstrap and t-distribution method. They both produced the same CI of (1.01,1.11). This implies that 95% of the time the delta for the given year will be between 1.01 and 1.11. 
+
+# Global warming and political views (GSS)
+
+[A 2010 Pew Research poll](https://www.pewresearch.org/2010/10/27/wide-partisan-divide-over-global-warming/) asked 1,306 Americans, "From what you've read and heard, is there solid evidence that the average temperature on earth has been getting warmer over the past few decades, or not?"
+
+
+In this exercise we analyze whether there are any differences between the proportion of people who believe the earth is getting warmer and their political ideology. As usual, from the **survey sample data**, we will use the proportions to estimate values of *population parameters*. The file has 2253 observations on the following 2 variables:
+
+- `party_or_ideology`: a factor (categorical) variable with levels Conservative Republican, Liberal Democrat, Mod/Cons Democrat, Mod/Lib Republican
+- `response` : whether the respondent believes the earth is warming or not, or Don't know/ refuse to answer
+
+```{r, read_global_warming_pew_data}
+global_warming_pew <- read_csv(here::here("data", "global_warming_pew.csv"))
+```
+
+You will also notice that many responses should not be taken into consideration, like "No Answer", "Don't Know", "Not applicable", "Refused to Answer".
+
+
+```{r}
+# Count response number about whether Earth is warming based on their different answers and party
+Longer <- global_warming_pew %>% 
+  count(party_or_ideology, response)
+```
+
+We will be constructing three 95% confidence intervals to estimate population parameters, for the % who believe that **Earth is warming**, accoridng to their party or ideology. You can create the CIs using the formulas by hand, or use `prop.test()`-- just rememebr to exclude the Dont know / refuse to answer!
+
+Does it appear that whether or not a respondent believes the earth is warming is independent of their party ideology? 
+
+You may want to read on [The challenging politics of climate change](https://www.brookings.edu/research/the-challenging-politics-of-climate-change/)
+
+```{r}
+# Transform the table into wider format and calculate CI of each party excluding neutral answer
+Wider <- Longer %>% 
+  filter(!response %in% c("Don't know / refuse to answer")) %>% 
+  pivot_wider(names_from = response, values_from = n) %>% 
+  rename('Yes'='Earth is warming', 'No'='Not warming') %>% 
+  mutate(Total=Yes+No,
+         Pr_Yes=Yes/Total,
+         SE=(Pr_Yes*(1-Pr_Yes)/Total)^(1/2),
+         Lower_95=Pr_Yes-1.96*SE,
+         Upper_95=Pr_Yes+1.96*SE) 
+
+```
+
+```{r}
+# Visualize CIs for all party and ideology
+Wider %>% 
+  arrange(desc(Pr_Yes)) %>% 
+ggplot(aes(x=party_or_ideology,y=Pr_Yes, colour=party_or_ideology)) +
+  geom_point() +
+  geom_errorbar(width=.5, aes(ymin=Lower_95, ymax=Upper_95)) + 
+  labs(x=" ",
+       y= "Pr(Yes): Propotion for those who think Earth is warming", 
+       title="Visualisation CIs for all party and ideology") + 
+  theme_bw()+
+  coord_flip()+
+  scale_y_continuous(limits = c(0.3, 1))+
+  theme(legend.position = "none")+
+  NULL
+
+```
+
+
+*It is shown in the graph that there is no overlapping in confidence intervals for these 4 party ideologies. The largest proportion of people believing in global warming is liberal democrat, whereas the conservative republican holds the smallest proportion. It is safe to say that whether people believing in global warming has something to do with their political ideology. *
+
+
+# Biden's Approval Margins
+
+As we saw in class, fivethirtyeight.com has detailed data on [all polls that track the president's approval ](https://projects.fivethirtyeight.com/biden-approval-ratings)
+
+```{r, cache=TRUE}
+# Import approval polls data directly off fivethirtyeight website
+approval_polllist <- read_csv('https://projects.fivethirtyeight.com/biden-approval-data/approval_polllist.csv') 
+
+glimpse(approval_polllist)
+skim(approval_polllist)
+
+approval_polllist %>% 
+  distinct()
+
+
+# Use `lubridate` to fix dates, as they are given as characters.
+```
+
+## Create a plot
+
+What I would like you to do is to calculate the average net approval rate (approve- disapprove) for each week since he got into office. I want you plot the net approval, along with its 95% confidence interval. There are various dates given for each poll, please use `enddate`, i.e., the date the poll ended.
+
+Also, please add an orange line at zero. Your plot should look like this:
+
+```{r trump_margins, echo=FALSE, out.width="100%"}
+knitr::include_graphics(here::here("images", "biden_approval_margin.png"), error = FALSE)
+```
+
+```{r}
+# Transform end date into different week and calculate net approval rate of Biden in each week
+approval_pollist_week <- approval_polllist %>% 
+  mutate(end_date=mdy(enddate)) %>% 
+  mutate(week=isoweek(end_date)) %>% 
+  filter(subgroup=="All polls") %>% 
+  mutate(net_approval_rate=approve-disapprove)
+```
+
+```{r}
+# Calculate each week average net approval rate and get CI of each week
+week_data <- approval_pollist_week %>% 
+  select(week,net_approval_rate) %>% 
+  group_by(week) %>% 
+  summarise(mean=mean(net_approval_rate),
+            sd=sd(net_approval_rate),
+            count=n(),
+            SE=sd/sqrt(count),
+            Lower_95=mean-1.96*SE,
+            Upper_95=mean+1.96*SE)
+  
+```
+
+
+```{r}
+# Visualize each week CI of net approval rate in time series
+
+week_data %>%  
+  ggplot()+
+  geom_point(aes(x=week,y=mean),color='red',size=1.5,alpha=0.5)+
+  geom_line(aes(x=week,y=mean),color='red',alpha=0.5)+
+  geom_smooth(aes(x=week,y=mean),color='blue',se = FALSE)+
+  geom_line(aes(x=week,y=Lower_95),color="red",alpha=0.5)+
+  geom_line(aes(x=week,y=Upper_95),color="red",alpha=0.5)+
+  geom_ribbon(aes(x=week,ymin=Lower_95,ymax=Upper_95),fill="grey",alpha=0.25)+
+  geom_hline(yintercept=0,color="orange",size=3)+
+  labs(x="Week of the year",
+       y= "Average Approval Margin (Approve-Disapprove)", 
+       title="Estimating Approval Margin (approve-disapprove) for Joe Biden",
+       subtitle = "Weekly average of all polls") + 
+  theme_bw()+
+  scale_y_continuous(limits = c(-15, 30),
+                     breaks = seq(-15,10,2.5)) +
+  scale_x_continuous(breaks = seq(13,26,13)) +
+  theme(legend.position = 'none')+
+  annotate(
+    geom = "text",
+    x = 24,
+    y = 30,
+    label = "2021",
+    size = 2.5,
+    colour = "black"
+  ) +
+  NULL
+  
+```
+
+
+## Compare Confidence Intervals
+
+Compare the confidence intervals for `week 3` and `week 25`. Can you explain what's going on? One paragraph would be enough.
+
+*There's no overlapping value in these two ranges, which indicates a huge difference in  net approval rate's confidence interval between 'week 3'(14.87,24.63) and 'week 25'(8.72,13.5). Jan 21st, which is the first day of the week 3, is the first week since Biden's inauguration as the 46th president of the United States. Shortly after the ceremony, Biden started to reversed many actions that previous president Trump has taken. We can see from our data set that both approval and disapproval rates had climbed up a bit during that week while net approval rate remains high, reflecting high levels of confidence in Biden. On Jun 27th of the week 25, Biden ordered an airstrike in Syria in retaliation, which was seen by some as a failed strategy at the time. This was against what majority of Americans hold, which is to withdraw troops to prevent from any further attacks. Net approval rates was dropping even further after.*
+
+
+# Challenge 1: Excess rentals in TfL bike sharing
+
+Recall the TfL data on how many bikes were hired every single day. We can get the latest data by running the following
+
+```{r, get_tfl_data, cache=TRUE}
+url <- "https://data.london.gov.uk/download/number-bicycle-hires/ac29363e-e0cb-47cc-a97a-e216d900a6b0/tfl-daily-cycle-hires.xlsx"
+
+# Download TFL data to temporary file
+httr::GET(url, write_disk(bike.temp <- tempfile(fileext = ".xlsx")))
+
+# Use read_excel to read it as dataframe
+bike0 <- read_excel(bike.temp,
+                   sheet = "Data",
+                   range = cell_cols("A:B"))
+
+# change dates to get year, month, and week
+bike <- bike0 %>% 
+  clean_names() %>% 
+  rename (bikes_hired = number_of_bicycle_hires) %>% 
+  mutate (year = year(day),
+          month = lubridate::month(day, label = TRUE),
+          week = isoweek(day))
+```
+
+
+
+We can easily create a facet grid that plots bikes hired by month and year.
+
+```{r tfl_month_year_grid, echo=FALSE, out.width="100%"}
+knitr::include_graphics(here::here("images", "tfl_distributions_monthly.png"), error = FALSE)
+```
+
+Look at May and Jun and compare 2020 with the previous years. What's happening?
+
+However, the challenge I want you to work on is to reproduce the following two graphs.
+
+```{r tfl_absolute_monthly_change, echo=FALSE, out.width="100%"}
+knitr::include_graphics(here::here("images", "tfl_monthly.png"), error = FALSE)
+```
+
+The second one looks at percentage changes from the expected level of weekly rentals. The two grey shaded rectangles correspond to Q2 (weeks 14-26) and Q4 (weeks 40-52).
+
+```{r tfl_percent_change, echo=FALSE, out.width="100%"}
+knitr::include_graphics(here::here("images", "tfl_weekly.png"), error = FALSE)
+```
+
+For both of these graphs, you have to calculate the expected number of rentals per week or month between 2016-2019 and then, see how each week/month of 2020-2021 compares to the expected rentals. Think of the calculation `excess_rentals = actual_rentals - expected_rentals`. 
+
+```{r,Monthly_average,message = FALSE, error = FALSE}
+
+# This is the monthly average for each month for 5 years from 2016 to 2021
+
+bike_data <- bike %>% 
+  filter(year%in%2016:2021) %>% 
+  group_by(year, month)%>%
+  summarise(monthly_mean = mean(bikes_hired))
+```
+
+
+
+```{r,Expected_rentals,message = FALSE, error = FALSE}
+
+# This is monthly expected average using 2016 to 2019 data
+monthly_bike <- bike %>% 
+    filter(year%in%2016:2019)%>%
+    group_by(month)%>%
+    summarise(expected_mean = mean(bikes_hired))
+```
+
+**The following is the table for the difference in 
+monthly actual rentals compared with expected rentals**
+
+```{r combined_table, message = FALSE, error = FALSE}
+# Create the dataframe to plot the graph and add the necessary coloumns 
+  
+  new_bike_data <- merge(bike_data, monthly_bike, 
+                         by = "month") %>%
+                    arrange(month)%>%
+                    arrange((year))%>%
+                    mutate(excess_rentals = monthly_mean - expected_mean,
+                          up = ifelse(monthly_mean>expected_mean, excess_rentals, 0),
+                          down = ifelse(monthly_mean<expected_mean, excess_rentals, 0))
+head(new_bike_data)
+```
+
+
+```{r Monthly_rental_graph, message = FALSE, error = FALSE}
+# Plot the graph
+ggplot(new_bike_data, aes(x=(month), group=1))+
+  
+#Add the ribbons to give colour to the Difference in actual vs expected  
+  geom_ribbon(aes(ymin=expected_mean,
+                  ymax=expected_mean+down),
+                  fill="#CB454A",
+                  alpha=0.4)+
+  geom_ribbon(aes(ymin=expected_mean+up,
+                  ymax=expected_mean),
+                  fill="#7DCD85",
+                  alpha=0.4)  +
+  
+#Add the actual and expected rental lines
+  geom_line(aes(y = expected_mean), 
+            colour ="blue", 
+            size = 1, 
+            alpha =0.5) + 
+  geom_line(aes(y= monthly_mean), 
+            size = 0.5, 
+            alpha =0.5)+
+  
+#Create subplots by year  
+  facet_wrap(~year)+
+  
+#Organise and label the graph  
+  theme_minimal()+
+  labs(x = "", y="Bike rentals", 
+       title = "Monthly changes in TfL bike rentals", 
+       subtitle="Change from monthly average shown in blue \n 
+                  and calculated between 2016-2019", 
+       caption = "Source: TfL, London Data Store") + 
+  
+#Adjust Axis labels to ensure they dont overlap
+  theme (axis.text.x = element_text(size=6), 
+         axis.text.y = element_text(size=6))
+```
+
+
+
+```{r,Weekly_rentals,message = FALSE, error = FALSE}
+
+# this is 7-year weekly averages
+weekly_bike_data <- bike %>% 
+  filter(year%in%2016:2021) %>% 
+  group_by(year, week)%>%
+  summarise(weekly_mean = mean(bikes_hired))
+
+```
+
+
+```{r,Weekly_expected_rentals,message = FALSE, error = FALSE}
+# this is the expected weekly average for 53 weeks using 2016 to 2019
+
+weekly_bike <- bike %>% 
+    filter(year%in%2016:2019)%>%
+    group_by(week)%>%
+    summarise(expected_weekly_mean = mean(bikes_hired))
+
+```
+
+
+**The following is the table for the difference in 
+weekly actual rentals compared with expected rentals**
+
+```{r,Weekly_rent_data,message = FALSE, error = FALSE}
+# Create the data frame to plot the graph and add the necessary columns
+  graph2_data <- merge(weekly_bike_data,weekly_bike,  by = "week") %>%
+  arrange(week)%>%
+  arrange((year))%>%
+  mutate(pct_change = ((weekly_mean-expected_weekly_mean)/expected_weekly_mean),
+          up = if_else(pct_change>0,pct_change,0), 
+          down = if_else(pct_change<=0,pct_change,0),
+          positive_pct_change = if_else(pct_change>0, TRUE, FALSE))%>%
+  slice_head(n=nrow(weekly_bike_data)-1)
+
+head(graph2_data)
+```
+
+
+```{r,Weekly_rentals_plot,message = FALSE, error = FALSE}
+
+ggplot(graph2_data, aes(x=week)) +
+  
+#Add contrasting background
+  geom_rect(aes(NULL,NULL,xmin=13,xmax=26), 
+            ymin=-Inf,ymax=Inf, 
+            colour="lightgrey", 
+            alpha=0.005)+
+  
+  geom_rect(aes(NULL,NULL,xmin=39,xmax=53), 
+            ymin=-Inf,ymax=Inf, 
+            colour="lightgrey", 
+            alpha=0.005)+
+  
+#Add the ribbons to give colour to the Difference in actual vs expected   
+  geom_ribbon(aes(ymin = 0, ymax = up), 
+              fill="#7DCD85", 
+              alpha=0.4)+
+  geom_ribbon(aes(ymin = 0, ymax = down), 
+              fill="#CB454A", 
+              alpha=0.4)+
+  
+#Add the Percentage change lines  
+  geom_line(aes(y = pct_change), alpha = 0.4)+
+
+
+  geom_rug(sides="b", aes(colour = positive_pct_change))+
+  
+#Create subplots by year  
+  facet_wrap(~year)+
+  
+#Organise and label the graph  
+  theme_minimal() + 
+  theme(legend.position="NONE") + 
+  labs(x = "week", y="", 
+       title = "Weekly changes in TfL bike rentals", 
+       subtitle="% change from weekly averages \n calculated between 2016-2019", 
+       caption = "Source: TfL, London Data Store")+
+  scale_y_continuous(labels = percent) 
+  
+```
+
+
+
+Should you use the mean or the median to calculate your expected rentals? Why?
+
+*We should use the mean to calculated expected data because this metric includes information about the tail ends. Medians generally ignore outline points. *
+
+```{r, tips,message = FALSE, error = FALSE}
+# In creating your plots, you may find these links useful:
+
+# - https://ggplot2.tidyverse.org/reference/geom_ribbon.html
+# - https://ggplot2.tidyverse.org/reference/geom_tile.html 
+# - https://ggplot2.tidyverse.org/reference/geom_rug.html
+
+```
+
+
+# Challenge 2: How has the CPI and its components changed over the last few years?
+
+Remember how we used the tidyqant package to download CPI data. In this exercise, I would like you to do the following:
+
+1. You can find [CPI components at  FRED](https://fredaccount.stlouisfed.org/public/datalist/843). You should adapt the code from German polls to scrape the FRED website and pull all of the CPI components into a vector. FIY, the list of components is the second table in that webpage.
+1. Once you have a vector of components, you can then pass it to `tidyquant::tq_get(get = "economic.data", from =  "2000-01-01")` to get all data since January 1, 2000
+1. Since the data you download is an index with various starting dates, you need to calculate the yearly, or 12-month change. To do this you need to use the `lag` function, and specifically, `year_change = value/lag(value, 12) - 1`; this means you are comparing the current month's value with that 12 months ago lag(value, 12).
+1. I want you to order components so the higher the yearly change, the earlier does that component appear.
+1. You should also make sure that the **All Items** CPI (CPIAUCSL) appears first.
+1. Add a `geom_smooth()` for each component to get a sense of the overall trend.
+1 You may want to colour the points according to whether yearly change was positive or negative. 
+
+Having done this, you should get this graph.
+
+```{r, fig.width= 20, fig.height= 10}
+
+library(tidyverse)
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(here)
+library(skimr)
+library(janitor)
+library(httr)
+library(readxl)
+library(vroom)
+library(tidyquant)
+library(rvest)
+library(scales)
+
+url <- "https://fredaccount.stlouisfed.org/public/datalist/843"
+
+tables <- url %>% 
+  read_html() %>% 
+  html_nodes(css="table")
+
+
+polls <- map(tables, . %>% 
+               html_table(fill=TRUE)%>% 
+               janitor::clean_names())
+components <- polls[[2]]
+
+#here I have created a dataframe that pulls the price data
+cpi <-  components %>%
+  select(series_id) %>% 
+  pull() %>% 
+  tq_get(get = "economic.data",
+         from = "2000-01-01")
+
+#here I have created another dataframe that only has the data which is relevant for my purposes. I filtered the data by date, changed the name of the titles, and added a column with the yearly change
+mydata <- cpi %>% 
+  left_join(components, by = c("symbol" = "series_id")) %>% 
+  select(title,
+         symbol,
+         date,
+         price) %>% 
+  group_by(symbol) %>% 
+  mutate(title = substring(title, first = 47), title = substr(title,1,nchar(title)-21)) %>%
+  mutate(yearly_change = ((price / lag(price, 12)) - 1)) %>%
+  filter(date >= "2016-01-01") %>%
+  filter(date <= "2021-08-01")
+#here, I have created vectors to reorder my data.
+order_1 <- aggregate(mydata[,5],list(mydata$title), max)
+order_2 <- arrange(order_1, desc(yearly_change))
+order_3 <- order_2[1:49,1]
+order_final <- order_3[c(24,1:23,25:49)]
+
+
+#here, I have graphed the results
+ggplot(mydata, aes(y = yearly_change, x = date))+
+  geom_point(aes(color = (price/lag(price,12) - 1) > 0), 
+             size = 1.8) + 
+  geom_smooth(method = "loess", 
+              color = "#9b9b9b",
+              size = 1.2,
+              se=FALSE) +
+  scale_color_manual(values=c("#8cc3f3", "#de7e81")) +
+  scale_y_continuous(labels = scales::percent) +
+  theme(panel.background = element_rect(fill = 'white', colour = 'black')) +
+  theme(panel.grid = element_line(colour = '#f1f1f1')) +
+  facet_wrap(~factor(title, levels = order_final), ncol = 7, nrow = 7, scales = "free") +
+  labs(title = "Yearly change of US CPI (All Items) and its components",
+         x = "Year", 
+         y = "Yearly Change (%)",
+         caption = "Data from St. Louis Fed FRED 
+       https://fredaccount.stlouisfed.org/public/datalist/843",
+         subtitle = "YoY change being positive or negative
+Jan 2016 to Aug 2021"
+       ) +
+  theme(legend.position = "none")
+
+  
+
+
+```
+
+```{r cpi_all_components_since_2016, echo=FALSE, out.width="100%"}
+knitr::include_graphics(here::here("images", "cpi_components_since_2016.png"), error = FALSE)
+```
+
+This graphs is fine, but perhaps has too many sub-categories. You can find the [relative importance of components in the Consumer Price Indexes: U.S. city average, December 2020](https://www.bls.gov/cpi/tables/relative-importance/2020.htm) here. Can you choose a smaller subset of the components you have and only list the major categories (Housing, Transportation, Food and beverages, Medical care, Education and communication, Recreation, and Apparel), sorted according to their relative importance?
+
+# Deliverables
+
+As usual, there is a lot of explanatory text, comments, etc. You do not need these, so delete them and produce a stand-alone document that you could share with someone. Knit the edited and completed R Markdown file as an HTML document (use the "Knit" button at the top of the script editor window) and upload it to Canvas.
+
+# Details
+
+- Who did you collaborate with: Valerio, Architt, Maggie, Daria, Yan Xin, Jake, Sam
+- Approximately how much time did you spend on this problem set: 80 hours total
+- What, if anything, gave you the most trouble: Sorting the data, plotting the graphs and formatting everything
+
+
+**Please seek out help when you need it,** and remember the [15-minute rule](https://mam202.netlify.app/syllabus/#the-15-minute-rule){target=_blank}. You know enough R (and have enough examples of code from class and your readings) to be able to do this. If you get stuck, ask for help from others, post a question on Slack-- and remember that I am here to help too!  
+
+> As a true test to yourself, do you understand the code you submitted and are you able to explain it to someone else? 
+
+
+# Rubric
+
+Check minus (1/5): Displays minimal effort. Doesn't complete all components. Code is poorly written and not documented. Uses the same type of plot for each graph, or doesn't use plots appropriate for the variables being analyzed. 
+
+Check (3/5): Solid effort. Hits all the elements. No clear mistakes. Easy to follow (both the code and the output). 
+
+Check plus (5/5): Finished all components of the assignment correctly and addressed both challenges. Code is well-documented (both self-documented and with additional comments as necessary). Used tidyverse, instead of base R. Graphs and tables are properly labelled. Analysis is clear and easy to follow, either because graphs are labeled clearly or you've written additional text to describe how you interpret the output.

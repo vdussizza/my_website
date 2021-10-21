@@ -1,0 +1,1075 @@
+---
+
+categories:  
+- ""    #the front matter should be like the one found in, e.g., blog2.md. It cannot be like the normal Rmd we used
+- ""
+date: "2021-10-21"
+description: Data # the title that will show up once someone gets to this page
+draft: false
+image: spices.jpg # save picture in \static\img\blogs. Acceptable formats= jpg, jpeg, or png . Your iPhone pics wont work
+
+keywords: ""
+slug: hw2 # slug is the shorthand URL address... no spaces plz
+title: Project 2
+
+author: "Group A4: Maggie, Architt, Valerio, Sam, Daria, Yan Xin"
+
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+
+<script src="Homework2 Group A4_files/header-attrs/header-attrs.js"></script>
+
+
+<hr />
+<p>categories:<br />
+- "" #the front matter should be like the one found in, e.g., blog2.md. It cannot be like the normal Rmd we used
+- ""
+date: “2021-10-21”
+description: Data # the title that will show up once someone gets to this page
+draft: false
+image: spices.jpg # save picture in . Acceptable formats= jpg, jpeg, or png . Your iPhone pics wont work</p>
+<p>keywords: ""
+slug: hw2 # slug is the shorthand URL address… no spaces plz
+title: Project 2</p>
+<p>author: “Group A4: Maggie, Architt, Valerio, Sam, Daria, Yan Xin”</p>
+<p>output:
+html_document:
+theme: flatly
+highlight: zenburn
+number_sections: yes
+toc: yes
+toc_float: yes
+code_folding: show
+—</p>
+<div id="climate-change-and-temperature-anomalies" class="section level1">
+<h1>Climate change and temperature anomalies</h1>
+<p>If we wanted to study climate change, we can find data on the <em>Combined Land-Surface Air and Sea-Surface Water Temperature Anomalies</em> in the Northern Hemisphere at <a href="https://data.giss.nasa.gov/gistemp">NASA’s Goddard Institute for Space Studies</a>. The <a href="https://data.giss.nasa.gov/gistemp/tabledata_v4/NH.Ts+dSST.txt">tabular data of temperature anomalies can be found here</a></p>
+<p>To define temperature anomalies you need to have a reference, or base, period which NASA clearly states that it is the period between 1951-1980.</p>
+<p>Run the code below to load the file:</p>
+<pre class="r"><code>weather &lt;-
+  read_csv(
+    &quot;https://data.giss.nasa.gov/gistemp/tabledata_v4/NH.Ts+dSST.csv&quot;,
+    skip = 1,
+    na = &quot;***&quot;
+  )
+
+glimpse(weather)</code></pre>
+<pre><code>## Rows: 142
+## Columns: 19
+## $ Year  &lt;dbl&gt; 1880, 1881, 1882, 1883, 1884, 1885, 1886, 1887, 1888, 1889, 1890~
+## $ Jan   &lt;dbl&gt; -0.35, -0.30, 0.26, -0.58, -0.16, -1.01, -0.74, -1.08, -0.48, -0~
+## $ Feb   &lt;dbl&gt; -0.51, -0.21, 0.21, -0.66, -0.11, -0.45, -0.83, -0.70, -0.61, 0.~
+## $ Mar   &lt;dbl&gt; -0.23, -0.03, 0.02, -0.16, -0.64, -0.23, -0.72, -0.44, -0.64, -0~
+## $ Apr   &lt;dbl&gt; -0.30, 0.01, -0.32, -0.30, -0.59, -0.48, -0.37, -0.38, -0.22, 0.~
+## $ May   &lt;dbl&gt; -0.06, 0.04, -0.24, -0.25, -0.36, -0.59, -0.34, -0.25, -0.15, -0~
+## $ Jun   &lt;dbl&gt; -0.16, -0.32, -0.30, -0.11, -0.41, -0.44, -0.37, -0.20, -0.03, -~
+## $ Jul   &lt;dbl&gt; -0.18, 0.08, -0.28, -0.05, -0.44, -0.34, -0.14, -0.24, -0.01, -0~
+## $ Aug   &lt;dbl&gt; -0.26, -0.04, -0.15, -0.22, -0.51, -0.41, -0.43, -0.54, -0.21, -~
+## $ Sep   &lt;dbl&gt; -0.23, -0.26, -0.24, -0.34, -0.44, -0.40, -0.33, -0.21, -0.20, -~
+## $ Oct   &lt;dbl&gt; -0.32, -0.43, -0.53, -0.16, -0.44, -0.37, -0.31, -0.49, -0.04, -~
+## $ Nov   &lt;dbl&gt; -0.43, -0.36, -0.33, -0.44, -0.57, -0.38, -0.39, -0.27, -0.01, -~
+## $ Dec   &lt;dbl&gt; -0.40, -0.22, -0.69, -0.15, -0.47, -0.11, -0.22, -0.43, -0.24, -~
+## $ `J-D` &lt;dbl&gt; -0.28, -0.17, -0.21, -0.28, -0.43, -0.43, -0.43, -0.44, -0.24, -~
+## $ `D-N` &lt;dbl&gt; NA, -0.19, -0.18, -0.33, -0.40, -0.46, -0.42, -0.42, -0.25, -0.1~
+## $ DJF   &lt;dbl&gt; NA, -0.30, 0.08, -0.64, -0.14, -0.64, -0.56, -0.67, -0.51, -0.08~
+## $ MAM   &lt;dbl&gt; -0.19, 0.01, -0.18, -0.24, -0.53, -0.43, -0.47, -0.36, -0.34, 0.~
+## $ JJA   &lt;dbl&gt; -0.20, -0.09, -0.24, -0.13, -0.45, -0.40, -0.32, -0.33, -0.08, -~
+## $ SON   &lt;dbl&gt; -0.33, -0.35, -0.37, -0.31, -0.49, -0.38, -0.35, -0.32, -0.08, -~</code></pre>
+<p>Notice that, when using this function, we added two options: <code>skip</code> and <code>na</code>.</p>
+<ol style="list-style-type: decimal">
+<li>The <code>skip=1</code> option is there as the real data table only starts in Row 2, so we need to skip one row.</li>
+<li><code>na = "***"</code> option informs R how missing observations in the spreadsheet are coded. When looking at the spreadsheet, you can see that missing data is coded as "***". It is best to specify this here, as otherwise some of the data is not recognized as numeric data.</li>
+</ol>
+<p>Once the data is loaded, notice that there is a object titled <code>weather</code> in the <code>Environment</code> panel. If you cannot see the panel (usually on the top-right), go to <code>Tools</code> &gt; <code>Global Options</code> &gt; <code>Pane Layout</code> and tick the checkbox next to <code>Environment</code>. Click on the <code>weather</code> object, and the dataframe will pop up on a seperate tab. Inspect the dataframe.</p>
+<p>For each month and year, the dataframe shows the deviation of temperature from the normal (expected). Further the dataframe is in wide format.</p>
+<p>You have two objectives in this section:</p>
+<ol style="list-style-type: decimal">
+<li><p>Select the year and the twelve month variables from the <code>weather</code> dataset. We do not need the others (J-D, D-N, DJF, etc.) for this assignment. Hint: use <code>select()</code> function.</p></li>
+<li><p>Convert the dataframe from wide to ‘long’ format. Hint: use <code>gather()</code> or <code>pivot_longer()</code> function. Name the new dataframe as <code>tidyweather</code>, name the variable containing the name of the month as <code>month</code>, and the temperature deviation values as <code>delta</code>.</p></li>
+</ol>
+<pre class="r"><code>weather_months = weather %&gt;%  #Selecting the months and yr 
+  select(1:13)
+
+glimpse(weather_months) #viewing variables</code></pre>
+<pre><code>## Rows: 142
+## Columns: 13
+## $ Year &lt;dbl&gt; 1880, 1881, 1882, 1883, 1884, 1885, 1886, 1887, 1888, 1889, 1890,~
+## $ Jan  &lt;dbl&gt; -0.35, -0.30, 0.26, -0.58, -0.16, -1.01, -0.74, -1.08, -0.48, -0.~
+## $ Feb  &lt;dbl&gt; -0.51, -0.21, 0.21, -0.66, -0.11, -0.45, -0.83, -0.70, -0.61, 0.2~
+## $ Mar  &lt;dbl&gt; -0.23, -0.03, 0.02, -0.16, -0.64, -0.23, -0.72, -0.44, -0.64, -0.~
+## $ Apr  &lt;dbl&gt; -0.30, 0.01, -0.32, -0.30, -0.59, -0.48, -0.37, -0.38, -0.22, 0.1~
+## $ May  &lt;dbl&gt; -0.06, 0.04, -0.24, -0.25, -0.36, -0.59, -0.34, -0.25, -0.15, -0.~
+## $ Jun  &lt;dbl&gt; -0.16, -0.32, -0.30, -0.11, -0.41, -0.44, -0.37, -0.20, -0.03, -0~
+## $ Jul  &lt;dbl&gt; -0.18, 0.08, -0.28, -0.05, -0.44, -0.34, -0.14, -0.24, -0.01, -0.~
+## $ Aug  &lt;dbl&gt; -0.26, -0.04, -0.15, -0.22, -0.51, -0.41, -0.43, -0.54, -0.21, -0~
+## $ Sep  &lt;dbl&gt; -0.23, -0.26, -0.24, -0.34, -0.44, -0.40, -0.33, -0.21, -0.20, -0~
+## $ Oct  &lt;dbl&gt; -0.32, -0.43, -0.53, -0.16, -0.44, -0.37, -0.31, -0.49, -0.04, -0~
+## $ Nov  &lt;dbl&gt; -0.43, -0.36, -0.33, -0.44, -0.57, -0.38, -0.39, -0.27, -0.01, -0~
+## $ Dec  &lt;dbl&gt; -0.40, -0.22, -0.69, -0.15, -0.47, -0.11, -0.22, -0.43, -0.24, -0~</code></pre>
+<pre class="r"><code>tidyweather &lt;- weather_months %&gt;% #Creating a new df, by chaning weather_months to long format and naming the columns month and delta
+  pivot_longer(cols = 2:13,
+               names_to = &quot;Month&quot;,
+               values_to = &quot;delta&quot;)
+
+glimpse(tidyweather)  #viewing new variables</code></pre>
+<pre><code>## Rows: 1,704
+## Columns: 3
+## $ Year  &lt;dbl&gt; 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880~
+## $ Month &lt;chr&gt; &quot;Jan&quot;, &quot;Feb&quot;, &quot;Mar&quot;, &quot;Apr&quot;, &quot;May&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Aug&quot;, &quot;Sep&quot;, &quot;~
+## $ delta &lt;dbl&gt; -0.35, -0.51, -0.23, -0.30, -0.06, -0.16, -0.18, -0.26, -0.23, -~</code></pre>
+<p>Inspect your dataframe. It should have three variables now, one each for</p>
+<ol style="list-style-type: decimal">
+<li>year,</li>
+<li>month, and</li>
+<li>delta, or temperature deviation.</li>
+</ol>
+<div id="plotting-information" class="section level2">
+<h2>Plotting Information</h2>
+<p>Let us plot the data using a time-series scatter plot, and add a trendline. To do that, we first need to create a new variable called <code>date</code> in order to ensure that the <code>delta</code> values are plot chronologically.</p>
+<blockquote>
+<p>In the following chunk of code, I used the <code>eval=FALSE</code> argument, which does not run a chunk of code; I did so that you can knit the document before tidying the data and creating a new dataframe <code>tidyweather</code>. When you actually want to run this code and knit your document, you must delete <code>eval=FALSE</code>, <strong>not just here but in all chunks were <code>eval=FALSE</code> appears.</strong></p>
+</blockquote>
+<pre class="r"><code>tidyweather &lt;- tidyweather %&gt;%
+  mutate(date = ymd(paste(as.character(Year), Month, &quot;1&quot;)),
+         month = month(date),
+         year = year(date))
+
+glimpse(tidyweather)</code></pre>
+<pre><code>## Rows: 1,704
+## Columns: 6
+## $ Year  &lt;dbl&gt; 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880~
+## $ Month &lt;chr&gt; &quot;Jan&quot;, &quot;Feb&quot;, &quot;Mar&quot;, &quot;Apr&quot;, &quot;May&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Aug&quot;, &quot;Sep&quot;, &quot;~
+## $ delta &lt;dbl&gt; -0.35, -0.51, -0.23, -0.30, -0.06, -0.16, -0.18, -0.26, -0.23, -~
+## $ date  &lt;date&gt; 1880-01-01, 1880-02-01, 1880-03-01, 1880-04-01, 1880-05-01, 188~
+## $ month &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9~
+## $ year  &lt;dbl&gt; 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880~</code></pre>
+<pre class="r"><code>ggplot(tidyweather, aes(x = date, y = delta)) +
+  geom_point() +
+  geom_smooth(color = &quot;red&quot;) +
+  theme_bw() +
+  labs (title = &quot;Weather Anomalies&quot;)</code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/scatter_plot-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p>Is the effect of increasing temperature more pronounced in some months? Use <code>facet_wrap()</code> to produce a seperate scatter plot for each month, again with a smoothing line. Your chart should human-readable labels; that is, each month should be labeled “Jan”, “Feb”, “Mar” (full or abbreviated month names are fine), not <code>1</code>, <code>2</code>, <code>3</code>.</p>
+<pre><code>## Rows: 1,704
+## Columns: 6
+## $ Year  &lt;dbl&gt; 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880~
+## $ Month &lt;chr&gt; &quot;Jan&quot;, &quot;Feb&quot;, &quot;Mar&quot;, &quot;Apr&quot;, &quot;May&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Aug&quot;, &quot;Sep&quot;, &quot;~
+## $ delta &lt;dbl&gt; -0.35, -0.51, -0.23, -0.30, -0.06, -0.16, -0.18, -0.26, -0.23, -~
+## $ date  &lt;date&gt; 1880-01-01, 1880-02-01, 1880-03-01, 1880-04-01, 1880-05-01, 188~
+## $ month &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9~
+## $ year  &lt;dbl&gt; 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880, 1880~</code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/facet_wrap-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p>It is sometimes useful to group data into different time periods to study historical data. For example, we often refer to decades such as 1970s, 1980s, 1990s etc. to refer to a period of time. NASA calcuialtes a temperature anomaly, as difference form the base periof of 1951-1980. The code below creates a new data frame called <code>comparison</code> that groups data in five time periods: 1881-1920, 1921-1950, 1951-1980, 1981-2010 and 2011-present.</p>
+<p>We remove data before 1800 and before using <code>filter</code>. Then, we use the <code>mutate</code> function to create a new variable <code>interval</code> which contains information on which period each observation belongs to. We can assign the different periods using <code>case_when()</code>.</p>
+<pre class="r"><code>comparison &lt;- tidyweather %&gt;%
+  filter(Year &gt;= 1881) %&gt;%     #remove years prior to 1881
+  #create new variable &#39;interval&#39;, and assign values based on criteria below:
+  mutate(
+    interval = case_when(
+      Year %in% c(1881:1920) ~ &quot;1881-1920&quot;,
+      Year %in% c(1921:1950) ~ &quot;1921-1950&quot;,
+      Year %in% c(1951:1980) ~ &quot;1951-1980&quot;,
+      Year %in% c(1981:2010) ~ &quot;1981-2010&quot;,
+      TRUE ~ &quot;2011-present&quot;
+    ))</code></pre>
+<p>Inspect the <code>comparison</code> dataframe by clicking on it in the <code>Environment</code> pane.</p>
+<p>Now that we have the <code>interval</code> variable, we can create a density plot to study the distribution of monthly deviations (<code>delta</code>), grouped by the different time periods we are interested in. Set <code>fill</code> to <code>interval</code> to group and colour the data by different time periods.</p>
+<pre class="r"><code>ggplot(comparison, aes(x=delta, fill=interval))+
+  geom_density(alpha=0.2) +   #density plot with transparency set to 20%
+  theme_bw() +                #theme
+  labs (
+    title = &quot;Density Plot for Monthly Temperature Anomalies&quot;,
+    y     = &quot;Density&quot;         #changing y-axis label to sentence case
+  )</code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/density_plot-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p>So far, we have been working with monthly anomalies. However, we might be interested in average annual anomalies. We can do this by using <code>group_by()</code> and <code>summarise()</code>, followed by a scatter plot to display the result.</p>
+<pre class="r"><code>#creating yearly averages
+average_annual_anomaly &lt;- tidyweather %&gt;%
+  group_by(Year) %&gt;%   #grouping data by Year
+  
+  # creating summaries for mean delta
+  # use `na.rm=TRUE` to eliminate NA (not available) values
+  summarise(annual_average_delta = mean(delta), na.rm = TRUE)
+
+#plotting the data:
+ggplot(average_annual_anomaly, aes(x = Year, y = annual_average_delta)) +
+  geom_point() +
+  
+  #Fit the best fit line, using LOESS method
+  geom_smooth() +
+  
+  #change to theme_bw() to have white background + black frame around plot
+  theme_bw() +
+  labs (title = &quot;Average Yearly Anomaly&quot;,
+        y     = &quot;Average Annual Delta&quot;)  #adding titles and y lab</code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/averaging-1.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="confidence-interval-for-delta" class="section level2">
+<h2>Confidence Interval for <code>delta</code></h2>
+<p><a href="https://earthobservatory.nasa.gov/world-of-change/decadaltemp.php">NASA points out on their website</a> that</p>
+<blockquote>
+<p>A one-degree global change is significant because it takes a vast amount of heat to warm all the oceans, atmosphere, and land by that much. In the past, a one- to two-degree drop was all it took to plunge the Earth into the Little Ice Age.</p>
+</blockquote>
+<p>Your task is to construct a confidence interval for the average annual delta since 2011, both using a formula and using a bootstrap simulation with the <code>infer</code> package. Recall that the dataframe <code>comparison</code> has already grouped temperature anomalies according to time intervals; we are only interested in what is happening between 2011-present.</p>
+<pre class="r"><code>t.score = qt(0.25, df = 1, lower.tail = F)  #Finding the t value for a 95% CI
+n = 128  #No. of detla values
+formula_ci &lt;- comparison %&gt;%
+  filter(interval == &quot;2011-present&quot;) %&gt;%  #selecting only the most recent data set
+  dplyr::summarise(
+    Average = mean(delta, na.rm = TRUE),  #Finding summary statisitcs to compute the CI
+    STDEV = sd(delta, na.rm = TRUE),
+    STE = STDEV / sqrt(n),
+    me = qt(0.975, n - 1) * STE,
+    CI = c(Average - me, Average + me)
+  )
+
+# calculate summary statistics for temperature deviation (delta)
+# calculate mean, SD, count, SE, lower/upper 95% CI
+# what dplyr verb will you use?
+
+#print out formula_CI
+formula_ci  #Outputs the CI</code></pre>
+<pre class="r"><code># use the infer package to construct a 95% CI for delta
+library(infer)
+
+Average &lt;- comparison %&gt;%
+  filter(interval == &quot;2011-present&quot;) %&gt;%  #selecting only the most recent data set
+  dplyr::summarise(
+    Average = mean(delta, na.rm = TRUE))
+
+dist &lt;- comparison %&gt;%
+  filter(interval == &quot;2011-present&quot;) %&gt;%
+  specify(response = delta) %&gt;%
+  generate(reps = 1000, type = &quot;bootstrap&quot;) %&gt;%  #Generating 1000 repetition bootstrap
+  calculate(stat = &quot;mean&quot;)
+
+dist %&gt;%
+  get_confidence_interval(point_estimate = Average,  #using this to find a CI
+                          level = 0.975,
+                          type = &quot;se&quot;)</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   lower_ci upper_ci
+##      &lt;dbl&gt;    &lt;dbl&gt;
+## 1     1.01     1.11</code></pre>
+<pre class="r"><code>dist %&gt;% 
+  visualize() +
+  shade_p_value(obs_stat = Average, direction = &quot;two-sided&quot;) #Creating a plot to show the distrubution </code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/calculate_CI_using_bootstrap-1.png" width="648" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>What is the data showing us? Please type your answer after (and outside!) this blockquote. You have to explain what you have done, and the interpretation of the result. One paragraph max, please!</p>
+</blockquote>
+<p>#Following a reorganisation of the data to long format, we created a time series scatter plot for each month showing the change in temperature from 1880 to present day. It is clear for all months the temperatures have risen, however the temperature change is greater during the winter months. This temperature increase was further backed up by the average annual anomaly plot. Then we found the 95% CI for the deltas from 2011-present, using both the bootstrap and t-distribution method. They both produced the same CI of (1.01,1.11). This implies that 95% of the time the delta for the given year will be between 1.01 and 1.11.</p>
+</div>
+</div>
+<div id="global-warming-and-political-views-gss" class="section level1">
+<h1>Global warming and political views (GSS)</h1>
+<p><a href="https://www.pewresearch.org/2010/10/27/wide-partisan-divide-over-global-warming/">A 2010 Pew Research poll</a> asked 1,306 Americans, “From what you’ve read and heard, is there solid evidence that the average temperature on earth has been getting warmer over the past few decades, or not?”</p>
+<p>In this exercise we analyze whether there are any differences between the proportion of people who believe the earth is getting warmer and their political ideology. As usual, from the <strong>survey sample data</strong>, we will use the proportions to estimate values of <em>population parameters</em>. The file has 2253 observations on the following 2 variables:</p>
+<ul>
+<li><code>party_or_ideology</code>: a factor (categorical) variable with levels Conservative Republican, Liberal Democrat, Mod/Cons Democrat, Mod/Lib Republican</li>
+<li><code>response</code> : whether the respondent believes the earth is warming or not, or Don’t know/ refuse to answer</li>
+</ul>
+<pre class="r"><code>global_warming_pew &lt;- read_csv(here::here(&quot;data&quot;, &quot;global_warming_pew.csv&quot;))</code></pre>
+<p>You will also notice that many responses should not be taken into consideration, like “No Answer”, “Don’t Know”, “Not applicable”, “Refused to Answer”.</p>
+<pre class="r"><code># Count response number about whether Earth is warming based on their different answers and party
+Longer &lt;- global_warming_pew %&gt;% 
+  count(party_or_ideology, response)</code></pre>
+<p>We will be constructing three 95% confidence intervals to estimate population parameters, for the % who believe that <strong>Earth is warming</strong>, accoridng to their party or ideology. You can create the CIs using the formulas by hand, or use <code>prop.test()</code>– just rememebr to exclude the Dont know / refuse to answer!</p>
+<p>Does it appear that whether or not a respondent believes the earth is warming is independent of their party ideology?</p>
+<p>You may want to read on <a href="https://www.brookings.edu/research/the-challenging-politics-of-climate-change/">The challenging politics of climate change</a></p>
+<pre class="r"><code># Transform the table into wider format and calculate CI of each party excluding neutral answer
+Wider &lt;- Longer %&gt;% 
+  filter(!response %in% c(&quot;Don&#39;t know / refuse to answer&quot;)) %&gt;% 
+  pivot_wider(names_from = response, values_from = n) %&gt;% 
+  rename(&#39;Yes&#39;=&#39;Earth is warming&#39;, &#39;No&#39;=&#39;Not warming&#39;) %&gt;% 
+  mutate(Total=Yes+No,
+         Pr_Yes=Yes/Total,
+         SE=(Pr_Yes*(1-Pr_Yes)/Total)^(1/2),
+         Lower_95=Pr_Yes-1.96*SE,
+         Upper_95=Pr_Yes+1.96*SE) </code></pre>
+<pre class="r"><code># Visualize CIs for all party and ideology
+Wider %&gt;% 
+  arrange(desc(Pr_Yes)) %&gt;% 
+ggplot(aes(x=party_or_ideology,y=Pr_Yes, colour=party_or_ideology)) +
+  geom_point() +
+  geom_errorbar(width=.5, aes(ymin=Lower_95, ymax=Upper_95)) + 
+  labs(x=&quot; &quot;,
+       y= &quot;Pr(Yes): Propotion for those who think Earth is warming&quot;, 
+       title=&quot;Visualisation CIs for all party and ideology&quot;) + 
+  theme_bw()+
+  coord_flip()+
+  scale_y_continuous(limits = c(0.3, 1))+
+  theme(legend.position = &quot;none&quot;)+
+  NULL</code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/unnamed-chunk-3-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><em>It is shown in the graph that there is no overlapping in confidence intervals for these 4 party ideologies. The largest proportion of people believing in global warming is liberal democrat, whereas the conservative republican holds the smallest proportion. It is safe to say that whether people believing in global warming has something to do with their political ideology. </em></p>
+</div>
+<div id="bidens-approval-margins" class="section level1">
+<h1>Biden’s Approval Margins</h1>
+<p>As we saw in class, fivethirtyeight.com has detailed data on <a href="https://projects.fivethirtyeight.com/biden-approval-ratings">all polls that track the president’s approval</a></p>
+<pre class="r"><code># Import approval polls data directly off fivethirtyeight website
+approval_polllist &lt;- read_csv(&#39;https://projects.fivethirtyeight.com/biden-approval-data/approval_polllist.csv&#39;) 
+
+glimpse(approval_polllist)</code></pre>
+<pre><code>## Rows: 1,972
+## Columns: 22
+## $ president           &lt;chr&gt; &quot;Joseph R. Biden Jr.&quot;, &quot;Joseph R. Biden Jr.&quot;, &quot;Jos~
+## $ subgroup            &lt;chr&gt; &quot;All polls&quot;, &quot;All polls&quot;, &quot;All polls&quot;, &quot;All polls&quot;~
+## $ modeldate           &lt;chr&gt; &quot;10/21/2021&quot;, &quot;10/21/2021&quot;, &quot;10/21/2021&quot;, &quot;10/21/2~
+## $ startdate           &lt;chr&gt; &quot;1/19/2021&quot;, &quot;1/19/2021&quot;, &quot;1/20/2021&quot;, &quot;1/20/2021&quot;~
+## $ enddate             &lt;chr&gt; &quot;1/21/2021&quot;, &quot;1/21/2021&quot;, &quot;1/22/2021&quot;, &quot;1/21/2021&quot;~
+## $ pollster            &lt;chr&gt; &quot;Rasmussen Reports/Pulse Opinion Research&quot;, &quot;Morni~
+## $ grade               &lt;chr&gt; &quot;B&quot;, &quot;B&quot;, &quot;B&quot;, &quot;B&quot;, &quot;B-&quot;, &quot;B+&quot;, &quot;B&quot;, &quot;B-&quot;, &quot;B+&quot;, &quot;~
+## $ samplesize          &lt;dbl&gt; 1500, 15000, 15000, 1993, 1115, 1516, 15000, 1200,~
+## $ population          &lt;chr&gt; &quot;lv&quot;, &quot;a&quot;, &quot;a&quot;, &quot;rv&quot;, &quot;a&quot;, &quot;a&quot;, &quot;a&quot;, &quot;rv&quot;, &quot;rv&quot;, &quot;~
+## $ weight              &lt;dbl&gt; 0.3382, 0.2594, 0.2333, 0.0930, 1.1014, 1.2454, 0.~
+## $ influence           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+## $ approve             &lt;dbl&gt; 48, 50, 51, 56, 55, 45, 52, 58, 63, 48, 55, 48, 53~
+## $ disapprove          &lt;dbl&gt; 45.0, 28.0, 28.0, 31.0, 32.0, 28.0, 29.0, 32.0, 37~
+## $ adjusted_approve    &lt;dbl&gt; 50.4, 48.5, 49.5, 54.5, 53.8, 46.4, 50.5, 56.8, 58~
+## $ adjusted_disapprove &lt;dbl&gt; 38.8, 31.2, 31.2, 34.2, 33.0, 28.5, 32.2, 33.1, 38~
+## $ multiversions       &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA~
+## $ tracking            &lt;lgl&gt; TRUE, TRUE, TRUE, NA, NA, NA, TRUE, NA, NA, TRUE, ~
+## $ url                 &lt;chr&gt; &quot;https://www.rasmussenreports.com/public_content/p~
+## $ poll_id             &lt;dbl&gt; 74247, 74272, 74273, 74246, 74248, 74327, 74274, 7~
+## $ question_id         &lt;dbl&gt; 139395, 139491, 139492, 139394, 139404, 139570, 13~
+## $ createddate         &lt;chr&gt; &quot;1/22/2021&quot;, &quot;1/28/2021&quot;, &quot;1/28/2021&quot;, &quot;1/22/2021&quot;~
+## $ timestamp           &lt;chr&gt; &quot;12:10:12 21 Oct 2021&quot;, &quot;12:10:12 21 Oct 2021&quot;, &quot;1~</code></pre>
+<pre class="r"><code>skim(approval_polllist)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-4">Table 1: </span>Data summary</caption>
+<tbody>
+<tr class="odd">
+<td align="left">Name</td>
+<td align="left">approval_polllist</td>
+</tr>
+<tr class="even">
+<td align="left">Number of rows</td>
+<td align="left">1972</td>
+</tr>
+<tr class="odd">
+<td align="left">Number of columns</td>
+<td align="left">22</td>
+</tr>
+<tr class="even">
+<td align="left">_______________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Column type frequency:</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">character</td>
+<td align="left">12</td>
+</tr>
+<tr class="odd">
+<td align="left">logical</td>
+<td align="left">1</td>
+</tr>
+<tr class="even">
+<td align="left">numeric</td>
+<td align="left">9</td>
+</tr>
+<tr class="odd">
+<td align="left">________________________</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">Group variables</td>
+<td align="left">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">min</th>
+<th align="right">max</th>
+<th align="right">empty</th>
+<th align="right">n_unique</th>
+<th align="right">whitespace</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">president</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">19</td>
+<td align="right">19</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">subgroup</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">6</td>
+<td align="right">9</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">modeldate</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">startdate</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">8</td>
+<td align="right">10</td>
+<td align="right">0</td>
+<td align="right">273</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">enddate</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">8</td>
+<td align="right">10</td>
+<td align="right">0</td>
+<td align="right">273</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">pollster</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">4</td>
+<td align="right">47</td>
+<td align="right">0</td>
+<td align="right">52</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">grade</td>
+<td align="right">32</td>
+<td align="right">0.98</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">11</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">population</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">multiversions</td>
+<td align="right">1936</td>
+<td align="right">0.02</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">url</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">33</td>
+<td align="right">275</td>
+<td align="right">0</td>
+<td align="right">474</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">createddate</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">8</td>
+<td align="right">10</td>
+<td align="right">0</td>
+<td align="right">206</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">timestamp</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">20</td>
+<td align="right">20</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: logical</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="left">count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">tracking</td>
+<td align="right">1026</td>
+<td align="right">0.48</td>
+<td align="right">1</td>
+<td align="left">TRU: 946</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table style="width:100%;">
+<colgroup>
+<col width="13%" />
+<col width="6%" />
+<col width="9%" />
+<col width="6%" />
+<col width="5%" />
+<col width="6%" />
+<col width="6%" />
+<col width="6%" />
+<col width="6%" />
+<col width="6%" />
+<col width="27%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="right">sd</th>
+<th align="right">p0</th>
+<th align="right">p25</th>
+<th align="right">p50</th>
+<th align="right">p75</th>
+<th align="right">p100</th>
+<th align="left">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">samplesize</td>
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="right">5.37e+03</td>
+<td align="right">6111.04</td>
+<td align="right">515.0</td>
+<td align="right">1.26e+03</td>
+<td align="right">1.50e+03</td>
+<td align="right">1.50e+04</td>
+<td align="right">2.20e+04</td>
+<td align="left">▇▁▁▃▁</td>
+</tr>
+<tr class="even">
+<td align="left">weight</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">5.70e-01</td>
+<td align="right">0.59</td>
+<td align="right">0.0</td>
+<td align="right">1.20e-01</td>
+<td align="right">2.10e-01</td>
+<td align="right">9.10e-01</td>
+<td align="right">3.16e+00</td>
+<td align="left">▇▃▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">influence</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">3.00e-02</td>
+<td align="right">0.15</td>
+<td align="right">0.0</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.00e+00</td>
+<td align="right">1.69e+00</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">approve</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">5.13e+01</td>
+<td align="right">4.50</td>
+<td align="right">37.0</td>
+<td align="right">4.80e+01</td>
+<td align="right">5.10e+01</td>
+<td align="right">5.40e+01</td>
+<td align="right">6.30e+01</td>
+<td align="left">▁▃▇▇▂</td>
+</tr>
+<tr class="odd">
+<td align="left">disapprove</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">4.27e+01</td>
+<td align="right">6.01</td>
+<td align="right">28.0</td>
+<td align="right">3.80e+01</td>
+<td align="right">4.20e+01</td>
+<td align="right">4.70e+01</td>
+<td align="right">5.80e+01</td>
+<td align="left">▂▇▆▆▁</td>
+</tr>
+<tr class="even">
+<td align="left">adjusted_approve</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">5.10e+01</td>
+<td align="right">3.83</td>
+<td align="right">38.6</td>
+<td align="right">4.86e+01</td>
+<td align="right">5.15e+01</td>
+<td align="right">5.34e+01</td>
+<td align="right">6.34e+01</td>
+<td align="left">▁▃▇▃▁</td>
+</tr>
+<tr class="odd">
+<td align="left">adjusted_disapprove</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">4.26e+01</td>
+<td align="right">4.54</td>
+<td align="right">27.4</td>
+<td align="right">3.93e+01</td>
+<td align="right">4.21e+01</td>
+<td align="right">4.56e+01</td>
+<td align="right">5.52e+01</td>
+<td align="left">▁▃▇▃▂</td>
+</tr>
+<tr class="even">
+<td align="left">poll_id</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">7.52e+04</td>
+<td align="right">752.33</td>
+<td align="right">74246.0</td>
+<td align="right">7.46e+04</td>
+<td align="right">7.49e+04</td>
+<td align="right">7.57e+04</td>
+<td align="right">7.69e+04</td>
+<td align="left">▇▅▃▂▃</td>
+</tr>
+<tr class="odd">
+<td align="left">question_id</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">1.43e+05</td>
+<td align="right">2163.83</td>
+<td align="right">139394.0</td>
+<td align="right">1.41e+05</td>
+<td align="right">1.43e+05</td>
+<td align="right">1.44e+05</td>
+<td align="right">1.47e+05</td>
+<td align="left">▇▁▆▅▃</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>approval_polllist %&gt;% 
+  distinct()</code></pre>
+<pre><code>## # A tibble: 1,972 x 22
+##    president   subgroup modeldate startdate enddate pollster    grade samplesize
+##    &lt;chr&gt;       &lt;chr&gt;    &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;      &lt;dbl&gt;
+##  1 Joseph R. ~ All pol~ 10/21/20~ 1/19/2021 1/21/2~ Rasmussen ~ B           1500
+##  2 Joseph R. ~ All pol~ 10/21/20~ 1/19/2021 1/21/2~ Morning Co~ B          15000
+##  3 Joseph R. ~ All pol~ 10/21/20~ 1/20/2021 1/22/2~ Morning Co~ B          15000
+##  4 Joseph R. ~ All pol~ 10/21/20~ 1/20/2021 1/21/2~ Morning Co~ B           1993
+##  5 Joseph R. ~ All pol~ 10/21/20~ 1/20/2021 1/21/2~ Ipsos       B-          1115
+##  6 Joseph R. ~ All pol~ 10/21/20~ 1/20/2021 1/21/2~ YouGov      B+          1516
+##  7 Joseph R. ~ All pol~ 10/21/20~ 1/21/2021 1/23/2~ Morning Co~ B          15000
+##  8 Joseph R. ~ All pol~ 10/21/20~ 1/21/2021 1/23/2~ RMG Resear~ B-          1200
+##  9 Joseph R. ~ All pol~ 10/21/20~ 1/21/2021 1/22/2~ HarrisX     B+           941
+## 10 Joseph R. ~ All pol~ 10/21/20~ 1/20/2021 1/24/2~ Rasmussen ~ B           1500
+## # ... with 1,962 more rows, and 14 more variables: population &lt;chr&gt;,
+## #   weight &lt;dbl&gt;, influence &lt;dbl&gt;, approve &lt;dbl&gt;, disapprove &lt;dbl&gt;,
+## #   adjusted_approve &lt;dbl&gt;, adjusted_disapprove &lt;dbl&gt;, multiversions &lt;chr&gt;,
+## #   tracking &lt;lgl&gt;, url &lt;chr&gt;, poll_id &lt;dbl&gt;, question_id &lt;dbl&gt;,
+## #   createddate &lt;chr&gt;, timestamp &lt;chr&gt;</code></pre>
+<pre class="r"><code># Use `lubridate` to fix dates, as they are given as characters.</code></pre>
+<div id="create-a-plot" class="section level2">
+<h2>Create a plot</h2>
+<p>What I would like you to do is to calculate the average net approval rate (approve- disapprove) for each week since he got into office. I want you plot the net approval, along with its 95% confidence interval. There are various dates given for each poll, please use <code>enddate</code>, i.e., the date the poll ended.</p>
+<p>Also, please add an orange line at zero. Your plot should look like this:</p>
+<p><img src="C:/Users/Valerio/Desktop/my_website/images/biden_approval_margin.png" width="100%" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Transform end date into different week and calculate net approval rate of Biden in each week
+approval_pollist_week &lt;- approval_polllist %&gt;% 
+  mutate(end_date=mdy(enddate)) %&gt;% 
+  mutate(week=isoweek(end_date)) %&gt;% 
+  filter(subgroup==&quot;All polls&quot;) %&gt;% 
+  mutate(net_approval_rate=approve-disapprove)</code></pre>
+<pre class="r"><code># Calculate each week average net approval rate and get CI of each week
+week_data &lt;- approval_pollist_week %&gt;% 
+  select(week,net_approval_rate) %&gt;% 
+  group_by(week) %&gt;% 
+  summarise(mean=mean(net_approval_rate),
+            sd=sd(net_approval_rate),
+            count=n(),
+            SE=sd/sqrt(count),
+            Lower_95=mean-1.96*SE,
+            Upper_95=mean+1.96*SE)</code></pre>
+<pre class="r"><code># Visualize each week CI of net approval rate in time series
+
+week_data %&gt;%  
+  ggplot()+
+  geom_point(aes(x=week,y=mean),color=&#39;red&#39;,size=1.5,alpha=0.5)+
+  geom_line(aes(x=week,y=mean),color=&#39;red&#39;,alpha=0.5)+
+  geom_smooth(aes(x=week,y=mean),color=&#39;blue&#39;,se = FALSE)+
+  geom_line(aes(x=week,y=Lower_95),color=&quot;red&quot;,alpha=0.5)+
+  geom_line(aes(x=week,y=Upper_95),color=&quot;red&quot;,alpha=0.5)+
+  geom_ribbon(aes(x=week,ymin=Lower_95,ymax=Upper_95),fill=&quot;grey&quot;,alpha=0.25)+
+  geom_hline(yintercept=0,color=&quot;orange&quot;,size=3)+
+  labs(x=&quot;Week of the year&quot;,
+       y= &quot;Average Approval Margin (Approve-Disapprove)&quot;, 
+       title=&quot;Estimating Approval Margin (approve-disapprove) for Joe Biden&quot;,
+       subtitle = &quot;Weekly average of all polls&quot;) + 
+  theme_bw()+
+  scale_y_continuous(limits = c(-15, 30),
+                     breaks = seq(-15,10,2.5)) +
+  scale_x_continuous(breaks = seq(13,26,13)) +
+  theme(legend.position = &#39;none&#39;)+
+  annotate(
+    geom = &quot;text&quot;,
+    x = 24,
+    y = 30,
+    label = &quot;2021&quot;,
+    size = 2.5,
+    colour = &quot;black&quot;
+  ) +
+  NULL</code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/unnamed-chunk-7-1.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="compare-confidence-intervals" class="section level2">
+<h2>Compare Confidence Intervals</h2>
+<p>Compare the confidence intervals for <code>week 3</code> and <code>week 25</code>. Can you explain what’s going on? One paragraph would be enough.</p>
+<p><em>There’s no overlapping value in these two ranges, which indicates a huge difference in net approval rate’s confidence interval between ‘week 3’(14.87,24.63) and ‘week 25’(8.72,13.5). Jan 21st, which is the first day of the week 3, is the first week since Biden’s inauguration as the 46th president of the United States. Shortly after the ceremony, Biden started to reversed many actions that previous president Trump has taken. We can see from our data set that both approval and disapproval rates had climbed up a bit during that week while net approval rate remains high, reflecting high levels of confidence in Biden. On Jun 27th of the week 25, Biden ordered an airstrike in Syria in retaliation, which was seen by some as a failed strategy at the time. This was against what majority of Americans hold, which is to withdraw troops to prevent from any further attacks. Net approval rates was dropping even further after.</em></p>
+</div>
+</div>
+<div id="challenge-1-excess-rentals-in-tfl-bike-sharing" class="section level1">
+<h1>Challenge 1: Excess rentals in TfL bike sharing</h1>
+<p>Recall the TfL data on how many bikes were hired every single day. We can get the latest data by running the following</p>
+<pre class="r"><code>url &lt;- &quot;https://data.london.gov.uk/download/number-bicycle-hires/ac29363e-e0cb-47cc-a97a-e216d900a6b0/tfl-daily-cycle-hires.xlsx&quot;
+
+# Download TFL data to temporary file
+httr::GET(url, write_disk(bike.temp &lt;- tempfile(fileext = &quot;.xlsx&quot;)))</code></pre>
+<pre><code>## Response [https://airdrive-secure.s3-eu-west-1.amazonaws.com/london/dataset/number-bicycle-hires/2021-09-23T12%3A52%3A20/tfl-daily-cycle-hires.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIAJJDIMAIVZJDICKHA%2F20211021%2Feu-west-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20211021T192741Z&amp;X-Amz-Expires=300&amp;X-Amz-Signature=30591eed39ad0eb31bd41ddc05597c6214fba01983bed7748f8dde3826d2118c&amp;X-Amz-SignedHeaders=host]
+##   Date: 2021-10-21 19:27
+##   Status: 200
+##   Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+##   Size: 174 kB
+## &lt;ON DISK&gt;  C:\Users\Valerio\AppData\Local\Temp\RtmpIphwJB\file9a405a2d2e1d.xlsx</code></pre>
+<pre class="r"><code># Use read_excel to read it as dataframe
+bike0 &lt;- read_excel(bike.temp,
+                   sheet = &quot;Data&quot;,
+                   range = cell_cols(&quot;A:B&quot;))
+
+# change dates to get year, month, and week
+bike &lt;- bike0 %&gt;% 
+  clean_names() %&gt;% 
+  rename (bikes_hired = number_of_bicycle_hires) %&gt;% 
+  mutate (year = year(day),
+          month = lubridate::month(day, label = TRUE),
+          week = isoweek(day))</code></pre>
+<p>We can easily create a facet grid that plots bikes hired by month and year.</p>
+<p><img src="C:/Users/Valerio/Desktop/my_website/images/tfl_distributions_monthly.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>Look at May and Jun and compare 2020 with the previous years. What’s happening?</p>
+<p>However, the challenge I want you to work on is to reproduce the following two graphs.</p>
+<p><img src="C:/Users/Valerio/Desktop/my_website/images/tfl_monthly.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>The second one looks at percentage changes from the expected level of weekly rentals. The two grey shaded rectangles correspond to Q2 (weeks 14-26) and Q4 (weeks 40-52).</p>
+<p><img src="C:/Users/Valerio/Desktop/my_website/images/tfl_weekly.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>For both of these graphs, you have to calculate the expected number of rentals per week or month between 2016-2019 and then, see how each week/month of 2020-2021 compares to the expected rentals. Think of the calculation <code>excess_rentals = actual_rentals - expected_rentals</code>.</p>
+<pre class="r"><code># This is the monthly average for each month for 5 years from 2016 to 2021
+
+bike_data &lt;- bike %&gt;% 
+  filter(year%in%2016:2021) %&gt;% 
+  group_by(year, month)%&gt;%
+  summarise(monthly_mean = mean(bikes_hired))</code></pre>
+<pre class="r"><code># This is monthly expected average using 2016 to 2019 data
+monthly_bike &lt;- bike %&gt;% 
+    filter(year%in%2016:2019)%&gt;%
+    group_by(month)%&gt;%
+    summarise(expected_mean = mean(bikes_hired))</code></pre>
+<p><strong>The following is the table for the difference in
+monthly actual rentals compared with expected rentals</strong></p>
+<pre class="r"><code># Create the dataframe to plot the graph and add the necessary coloumns 
+  
+  new_bike_data &lt;- merge(bike_data, monthly_bike, 
+                         by = &quot;month&quot;) %&gt;%
+                    arrange(month)%&gt;%
+                    arrange((year))%&gt;%
+                    mutate(excess_rentals = monthly_mean - expected_mean,
+                          up = ifelse(monthly_mean&gt;expected_mean, excess_rentals, 0),
+                          down = ifelse(monthly_mean&lt;expected_mean, excess_rentals, 0))
+head(new_bike_data)</code></pre>
+<pre><code>##   month year monthly_mean expected_mean excess_rentals up  down
+## 1   Jan 2016        18914         20617          -1703  0 -1703
+## 2   Feb 2016        20608         22049          -1441  0 -1441
+## 3   Mar 2016        21435         23237          -1802  0 -1802
+## 4   Apr 2016        25444         28299          -2856  0 -2856
+## 5   May 2016        32699         33270           -571  0  -571
+## 6   Jun 2016        32108         35413          -3306  0 -3306</code></pre>
+<pre class="r"><code># Plot the graph
+ggplot(new_bike_data, aes(x=(month), group=1))+
+  
+#Add the ribbons to give colour to the Difference in actual vs expected  
+  geom_ribbon(aes(ymin=expected_mean,
+                  ymax=expected_mean+down),
+                  fill=&quot;#CB454A&quot;,
+                  alpha=0.4)+
+  geom_ribbon(aes(ymin=expected_mean+up,
+                  ymax=expected_mean),
+                  fill=&quot;#7DCD85&quot;,
+                  alpha=0.4)  +
+  
+#Add the actual and expected rental lines
+  geom_line(aes(y = expected_mean), 
+            colour =&quot;blue&quot;, 
+            size = 1, 
+            alpha =0.5) + 
+  geom_line(aes(y= monthly_mean), 
+            size = 0.5, 
+            alpha =0.5)+
+  
+#Create subplots by year  
+  facet_wrap(~year)+
+  
+#Organise and label the graph  
+  theme_minimal()+
+  labs(x = &quot;&quot;, y=&quot;Bike rentals&quot;, 
+       title = &quot;Monthly changes in TfL bike rentals&quot;, 
+       subtitle=&quot;Change from monthly average shown in blue \n 
+                  and calculated between 2016-2019&quot;, 
+       caption = &quot;Source: TfL, London Data Store&quot;) + 
+  
+#Adjust Axis labels to ensure they dont overlap
+  theme (axis.text.x = element_text(size=6), 
+         axis.text.y = element_text(size=6))</code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/Monthly_rental_graph-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># this is 7-year weekly averages
+weekly_bike_data &lt;- bike %&gt;% 
+  filter(year%in%2016:2021) %&gt;% 
+  group_by(year, week)%&gt;%
+  summarise(weekly_mean = mean(bikes_hired))</code></pre>
+<pre class="r"><code># this is the expected weekly average for 53 weeks using 2016 to 2019
+
+weekly_bike &lt;- bike %&gt;% 
+    filter(year%in%2016:2019)%&gt;%
+    group_by(week)%&gt;%
+    summarise(expected_weekly_mean = mean(bikes_hired))</code></pre>
+<p><strong>The following is the table for the difference in
+weekly actual rentals compared with expected rentals</strong></p>
+<pre class="r"><code># Create the data frame to plot the graph and add the necessary columns
+  graph2_data &lt;- merge(weekly_bike_data,weekly_bike,  by = &quot;week&quot;) %&gt;%
+  arrange(week)%&gt;%
+  arrange((year))%&gt;%
+  mutate(pct_change = ((weekly_mean-expected_weekly_mean)/expected_weekly_mean),
+          up = if_else(pct_change&gt;0,pct_change,0), 
+          down = if_else(pct_change&lt;=0,pct_change,0),
+          positive_pct_change = if_else(pct_change&gt;0, TRUE, FALSE))%&gt;%
+  slice_head(n=nrow(weekly_bike_data)-1)
+
+head(graph2_data)</code></pre>
+<pre><code>##   week year weekly_mean expected_weekly_mean pct_change      up    down
+## 1    1 2016       18867                17202    0.09678 0.09678  0.0000
+## 2    2 2016       20255                22056   -0.08169 0.00000 -0.0817
+## 3    3 2016       20937                21892   -0.04362 0.00000 -0.0436
+## 4    4 2016       20550                21470   -0.04285 0.00000 -0.0428
+## 5    5 2016       21230                21194    0.00169 0.00169  0.0000
+## 6    6 2016       19896                20226   -0.01633 0.00000 -0.0163
+##   positive_pct_change
+## 1                TRUE
+## 2               FALSE
+## 3               FALSE
+## 4               FALSE
+## 5                TRUE
+## 6               FALSE</code></pre>
+<pre class="r"><code>ggplot(graph2_data, aes(x=week)) +
+  
+#Add contrasting background
+  geom_rect(aes(NULL,NULL,xmin=13,xmax=26), 
+            ymin=-Inf,ymax=Inf, 
+            colour=&quot;lightgrey&quot;, 
+            alpha=0.005)+
+  
+  geom_rect(aes(NULL,NULL,xmin=39,xmax=53), 
+            ymin=-Inf,ymax=Inf, 
+            colour=&quot;lightgrey&quot;, 
+            alpha=0.005)+
+  
+#Add the ribbons to give colour to the Difference in actual vs expected   
+  geom_ribbon(aes(ymin = 0, ymax = up), 
+              fill=&quot;#7DCD85&quot;, 
+              alpha=0.4)+
+  geom_ribbon(aes(ymin = 0, ymax = down), 
+              fill=&quot;#CB454A&quot;, 
+              alpha=0.4)+
+  
+#Add the Percentage change lines  
+  geom_line(aes(y = pct_change), alpha = 0.4)+
+
+
+  geom_rug(sides=&quot;b&quot;, aes(colour = positive_pct_change))+
+  
+#Create subplots by year  
+  facet_wrap(~year)+
+  
+#Organise and label the graph  
+  theme_minimal() + 
+  theme(legend.position=&quot;NONE&quot;) + 
+  labs(x = &quot;week&quot;, y=&quot;&quot;, 
+       title = &quot;Weekly changes in TfL bike rentals&quot;, 
+       subtitle=&quot;% change from weekly averages \n calculated between 2016-2019&quot;, 
+       caption = &quot;Source: TfL, London Data Store&quot;)+
+  scale_y_continuous(labels = percent) </code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/Weekly_rentals_plot-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p>Should you use the mean or the median to calculate your expected rentals? Why?</p>
+<p><em>We should use the mean to calculated expected data because this metric includes information about the tail ends. Medians generally ignore outline points. </em></p>
+<pre class="r"><code># In creating your plots, you may find these links useful:
+
+# - https://ggplot2.tidyverse.org/reference/geom_ribbon.html
+# - https://ggplot2.tidyverse.org/reference/geom_tile.html 
+# - https://ggplot2.tidyverse.org/reference/geom_rug.html</code></pre>
+</div>
+<div id="challenge-2-how-has-the-cpi-and-its-components-changed-over-the-last-few-years" class="section level1">
+<h1>Challenge 2: How has the CPI and its components changed over the last few years?</h1>
+<p>Remember how we used the tidyqant package to download CPI data. In this exercise, I would like you to do the following:</p>
+<ol style="list-style-type: decimal">
+<li>You can find <a href="https://fredaccount.stlouisfed.org/public/datalist/843">CPI components at FRED</a>. You should adapt the code from German polls to scrape the FRED website and pull all of the CPI components into a vector. FIY, the list of components is the second table in that webpage.</li>
+<li>Once you have a vector of components, you can then pass it to <code>tidyquant::tq_get(get = "economic.data", from =  "2000-01-01")</code> to get all data since January 1, 2000</li>
+<li>Since the data you download is an index with various starting dates, you need to calculate the yearly, or 12-month change. To do this you need to use the <code>lag</code> function, and specifically, <code>year_change = value/lag(value, 12) - 1</code>; this means you are comparing the current month’s value with that 12 months ago lag(value, 12).</li>
+<li>I want you to order components so the higher the yearly change, the earlier does that component appear.</li>
+<li>You should also make sure that the <strong>All Items</strong> CPI (CPIAUCSL) appears first.</li>
+<li>Add a <code>geom_smooth()</code> for each component to get a sense of the overall trend.
+1 You may want to colour the points according to whether yearly change was positive or negative.</li>
+</ol>
+<p>Having done this, you should get this graph.</p>
+<pre class="r"><code>library(tidyverse)
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(here)
+library(skimr)
+library(janitor)
+library(httr)
+library(readxl)
+library(vroom)
+library(tidyquant)
+library(rvest)
+library(scales)
+
+url &lt;- &quot;https://fredaccount.stlouisfed.org/public/datalist/843&quot;
+
+tables &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(css=&quot;table&quot;)
+
+
+polls &lt;- map(tables, . %&gt;% 
+               html_table(fill=TRUE)%&gt;% 
+               janitor::clean_names())
+components &lt;- polls[[2]]
+
+#here I have created a dataframe that pulls the price data
+cpi &lt;-  components %&gt;%
+  select(series_id) %&gt;% 
+  pull() %&gt;% 
+  tq_get(get = &quot;economic.data&quot;,
+         from = &quot;2000-01-01&quot;)
+
+#here I have created another dataframe that only has the data which is relevant for my purposes. I filtered the data by date, changed the name of the titles, and added a column with the yearly change
+mydata &lt;- cpi %&gt;% 
+  left_join(components, by = c(&quot;symbol&quot; = &quot;series_id&quot;)) %&gt;% 
+  select(title,
+         symbol,
+         date,
+         price) %&gt;% 
+  group_by(symbol) %&gt;% 
+  mutate(title = substring(title, first = 47), title = substr(title,1,nchar(title)-21)) %&gt;%
+  mutate(yearly_change = ((price / lag(price, 12)) - 1)) %&gt;%
+  filter(date &gt;= &quot;2016-01-01&quot;) %&gt;%
+  filter(date &lt;= &quot;2021-08-01&quot;)
+#here, I have created vectors to reorder my data.
+order_1 &lt;- aggregate(mydata[,5],list(mydata$title), max)
+order_2 &lt;- arrange(order_1, desc(yearly_change))
+order_3 &lt;- order_2[1:49,1]
+order_final &lt;- order_3[c(24,1:23,25:49)]
+
+
+#here, I have graphed the results
+ggplot(mydata, aes(y = yearly_change, x = date))+
+  geom_point(aes(color = (price/lag(price,12) - 1) &gt; 0), 
+             size = 1.8) + 
+  geom_smooth(method = &quot;loess&quot;, 
+              color = &quot;#9b9b9b&quot;,
+              size = 1.2,
+              se=FALSE) +
+  scale_color_manual(values=c(&quot;#8cc3f3&quot;, &quot;#de7e81&quot;)) +
+  scale_y_continuous(labels = scales::percent) +
+  theme(panel.background = element_rect(fill = &#39;white&#39;, colour = &#39;black&#39;)) +
+  theme(panel.grid = element_line(colour = &#39;#f1f1f1&#39;)) +
+  facet_wrap(~factor(title, levels = order_final), ncol = 7, nrow = 7, scales = &quot;free&quot;) +
+  labs(title = &quot;Yearly change of US CPI (All Items) and its components&quot;,
+         x = &quot;Year&quot;, 
+         y = &quot;Yearly Change (%)&quot;,
+         caption = &quot;Data from St. Louis Fed FRED 
+       https://fredaccount.stlouisfed.org/public/datalist/843&quot;,
+         subtitle = &quot;YoY change being positive or negative
+Jan 2016 to Aug 2021&quot;
+       ) +
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/blogs/Homework2%20Group%20A4_files/figure-html/unnamed-chunk-8-1.png" width="1920" style="display: block; margin: auto;" /></p>
+<p><img src="C:/Users/Valerio/Desktop/my_website/images/cpi_components_since_2016.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>This graphs is fine, but perhaps has too many sub-categories. You can find the <a href="https://www.bls.gov/cpi/tables/relative-importance/2020.htm">relative importance of components in the Consumer Price Indexes: U.S. city average, December 2020</a> here. Can you choose a smaller subset of the components you have and only list the major categories (Housing, Transportation, Food and beverages, Medical care, Education and communication, Recreation, and Apparel), sorted according to their relative importance?</p>
+</div>
+<div id="deliverables" class="section level1">
+<h1>Deliverables</h1>
+<p>As usual, there is a lot of explanatory text, comments, etc. You do not need these, so delete them and produce a stand-alone document that you could share with someone. Knit the edited and completed R Markdown file as an HTML document (use the “Knit” button at the top of the script editor window) and upload it to Canvas.</p>
+</div>
+<div id="details" class="section level1">
+<h1>Details</h1>
+<ul>
+<li>Who did you collaborate with: Valerio, Architt, Maggie, Daria, Yan Xin, Jake, Sam</li>
+<li>Approximately how much time did you spend on this problem set: 80 hours total</li>
+<li>What, if anything, gave you the most trouble: Sorting the data, plotting the graphs and formatting everything</li>
+</ul>
+<p><strong>Please seek out help when you need it,</strong> and remember the <a href="https://mam202.netlify.app/syllabus/#the-15-minute-rule" target="_blank">15-minute rule</a>. You know enough R (and have enough examples of code from class and your readings) to be able to do this. If you get stuck, ask for help from others, post a question on Slack– and remember that I am here to help too!</p>
+<blockquote>
+<p>As a true test to yourself, do you understand the code you submitted and are you able to explain it to someone else?</p>
+</blockquote>
+</div>
+<div id="rubric" class="section level1">
+<h1>Rubric</h1>
+<p>Check minus (1/5): Displays minimal effort. Doesn’t complete all components. Code is poorly written and not documented. Uses the same type of plot for each graph, or doesn’t use plots appropriate for the variables being analyzed.</p>
+<p>Check (3/5): Solid effort. Hits all the elements. No clear mistakes. Easy to follow (both the code and the output).</p>
+<p>Check plus (5/5): Finished all components of the assignment correctly and addressed both challenges. Code is well-documented (both self-documented and with additional comments as necessary). Used tidyverse, instead of base R. Graphs and tables are properly labelled. Analysis is clear and easy to follow, either because graphs are labeled clearly or you’ve written additional text to describe how you interpret the output.</p>
+</div>
