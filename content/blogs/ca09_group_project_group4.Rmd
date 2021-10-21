@@ -1,0 +1,574 @@
+---
+categories:  
+- ""    #the front matter should be like the one found in, e.g., blog2.md. It cannot be like the normal Rmd we used
+- ""
+date: "`r Sys.Date()`"
+description: Data # the title that will show up once someone gets to this page
+draft: false
+image: spices.jpg # save picture in \static\img\blogs. Acceptable formats= jpg, jpeg, or png . Your iPhone pics wont work
+
+keywords: ""
+slug: hw1 # slug is the shorthand URL address... no spaces plz
+title: Project 1
+
+author: "Group A4: Maggie, Architt, Valerio, Sam, Daria, Yan Xin"
+
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+
+
+```{r setup, include=FALSE}
+# leave this chunk alone
+options(knitr.table.format = "html") 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
+  comment = NA, dpi = 300)
+```
+
+
+```{r load-libraries, echo=FALSE}
+
+library(tidyverse) # the usual stuff: dplyr, readr, and other goodies
+library(lubridate) # to handle dates
+library(GGally) # for correlation-scatter plot matrix
+library(ggfortify) # to produce residual diagnostic plots
+library(rsample) # to split dataframe in training- & testing sets
+library(janitor) # clean_names()
+library(broom) # use broom:augment() to get tidy table with regression output, residuals, etc
+library(huxtable) # to get summary table of all models produced
+library(kableExtra) # for formatting tables
+library(moderndive) # for getting regression tables
+library(skimr) # for skim
+library(mosaic)
+library(leaflet) # for interactive HTML maps
+library(tidytext)
+library(viridis)
+library(vroom)
+library(dplyr)
+```
+
+
+
+```{r load_data, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
+
+# use cache=TRUE so you dont donwload the data everytime you knit
+
+listings <- vroom("http://data.insideairbnb.com/canada/qc/montreal/2021-09-14/data/listings.csv.gz") %>% 
+       clean_names()
+
+```
+
+
+```{r data_overview,message = FALSE, error = FALSE}
+glimpse(listings)
+```
+
+# Exploratory Data Analysis (EDA) of Airbnb Properties in Montreal
+
+## Initial view of the data
+
+*Initially glimpsing the data, there are 12540 observations of 74 variables, however not all of these will have an effect on price, such as the host_Url. Therefore we manually removed such varibales, along with filtering by minimum no of nights less than 4 and accomodates 2 or more people. We called this data set newlistings 1.*
+
+```{r refine_data,message = FALSE, error = FALSE}
+
+newlistings1 <- listings %>%
+## "price": to transform from character string to a numeric
+  mutate(price = parse_number(price)) %>%
+## Filter data to match situation with 2 people for 4 nights in airbnb
+  filter(minimum_nights <= 4) %>%
+  filter(accommodates >= 2) %>%
+
+## "prop_type_simplified": to narrow down categories into 5  
+  mutate(Property_Type = case_when(
+    property_type %in% c(
+      "Entire rental unit",
+      "Private room in rental unit",
+      "Entire condominium (condo)",
+      "Entire loft"
+    ) ~ property_type,
+    TRUE ~ "Other"
+  ))
+
+
+## delete those non-numeric variable which will not be used in regression
+newlistings1 = newlistings1[-c(1,
+                               3:12,
+                               13:15,
+                               19:21,
+                               23,
+                               27:29,
+                               30:32,
+                               35,
+                               43:50,
+                               53:55,
+                               59,
+                               60,
+                               68,
+                               70:73)]
+
+glimpse(newlistings1)
+
+```
+
+## Data cleaning & wrangling
+
+*A glimpse of data newlistings1, reveals we now have 7400 observations with 32 variables, this is much more accessible date, however we noticed that there are a few price anomalies. Therefore using the confidence interval function of price, we removed the upper and lower 5% outliers in a new df, newlistings 2. Along with this we mutated some of the variables for example, converting host_verifications to numbers and making host acceptance rate to percentage.*
+
+```{r data_cleaning,message = FALSE, error = FALSE}
+
+## to get anomalous prices with upper 5% and lower 5%
+## to get upper 5% and lower 5%, [30,350]
+confint(newlistings1$price,mean,level=0.9)
+
+newlistings2 <- newlistings1 %>%
+  
+  ## to delete outliers in price with upper and lower 5%
+  filter(price <= 350, price >=30)  %>%
+  
+  ## "host_verifications": to count the total number of items included
+  mutate(host_verifications = stringr::str_count(host_verifications, ',') + 1) %>%
+  
+  ## "amenities": to count the total number of items included
+  mutate(amenities = stringr::str_count(amenities, ',') + 1) %>%
+  
+  ## "host_response_rate": to transform from character string to a numeric
+  mutate(host_response_rate = as.numeric(sub("%", "", host_response_rate)) /
+           100) %>%
+  
+  ## "host_acceptance_rate": to transform from character string to a numeric  
+  mutate(host_acceptance_rate = as.numeric(sub("%", "", host_acceptance_rate)) /
+           100) %>%
+  
+  ## create new variable checking if there are shared bathrooms or not
+  mutate(shared_bathroom = grepl("shared", bathrooms_text, fixed = TRUE)) %>%
+  
+  ## convert "bathroom text" into a numeric
+  mutate(bathrooms_text = as.numeric(sapply(strsplit(bathrooms_text, " "), "[[", 1))) %>% 
+  
+   # "price_4_nights": to create total cost for 4 nights  
+  mutate(price_4_nights = price*4) %>%
+  
+  # "log_price_4_nights": to see whether "log" processing is better doing regression if skewness exists
+  mutate(log_price_4_nights=log(price_4_nights))
+
+newlistings3 <- newlistings2
+  
+```
+
+## Prepare for visualization
+
+*Now we can start to use EDA on this new dataframe, Step 1, Glimpsing the data:*
+  
+```{r view_clean_data,,message = FALSE, error = FALSE}
+glimpse(newlistings2)
+favstats(~price, data = newlistings2)
+```
+
+*Here we see there are now 6674 observation due to removing the price anomalies, and there are 35 variables, as we have added back in shared_bathrooms. Using favstat we can see that the mean has decreased slightly, however the SD has decreased by 4x. *
+
+```{r add_back_data,message = FALSE, error = FALSE}
+skimr::skim(newlistings2)
+```
+
+*Using this, we can see; there are 1 character variable, 5 logics and 27 numeric variables.*
+
+## Plot1: Scatter Plot to Show Price against Amenities
+```{r plot_1,message = FALSE, error = FALSE}
+#Plot 1
+ggplot(newlistings2, aes(x = price, y = amenities, colour = Property_Type)) + #Plotting a scatter plot of price against amenities and classifying the points by property type
+  geom_point() +
+  labs (#Axis Titles and Labels
+    x = "Price",
+    y = "Amenities") +
+  ggtitle("Scatter Plot to Show Price against Amenities") +
+  theme_bw()
+```
+
+*The above plot shows the price of the AirBnB against the amenities they offer, colored by property type. From the graph it shows little correlation between price and amenities. We believe this is the case because the price of the amenities are fairly low, such as hair dryers, heating, bed linen etc, therefore no matter if the price of the accommodation is low it is still feasible to afford the amenities. The plot does show that the majority of the properties have a price less than $200.*
+
+*However there is a correlation between price and private rooms. These are all clustered in the <£200 section with a few outliers, this could be due to the lack of desire to share a house with others and therefore it drives the price of the property down.*
+
+## Plot 2: Scatter Plot to Show Log Price against Amenities
+
+```{r plot_2,message = FALSE, error = FALSE}
+#Plot 2
+ggplot(newlistings2, aes(x = price, y = amenities, colour = Property_Type)) + #Plotting a scatter plot of price against amenities and classifying the points by property type
+  geom_point() +
+  scale_x_log10(labels = scales::comma) +
+  labs (#Axis Titles and Labels
+    x = "Price",
+    y = "Amenities") +
+  ggtitle("Scatter Plot to Show Log Price against Amenities") +
+  theme_bw()
+```
+
+*This plot is the same as the above however we have decided to use log of price as it produces a more normal distribution, it is here a lot clearer to see the shared rooms are the most affordable ones. We will continue therefore to use log price from now on.*
+
+## Plot 3: Histogram to Show Log Price
+
+```{r plot_3,message = FALSE, error = FALSE}
+#Plot 3
+ggplot(newlistings2, aes(x = price, alpha = 0.6)) + #Plotting a histogram of price
+  geom_histogram(aes(y = ..density..), colour = "black", fill = "blue") +
+  #scale_x_log10(labels = scales::comma) + #Changing to Log Scale
+  labs (#Axis Titles and Labels
+    x = "Price",
+    y = "Frequency Density") +
+  ggtitle("Histogram to Show Price") +
+  theme_bw() +
+  geom_vline(aes(xintercept = mean(price)),col='red',size=2, alpha = 0.6)
+
+ggplot(newlistings2, aes(x = price, alpha = 0.6)) + #Plotting a histogram of price
+  geom_histogram(aes(y = ..density..), colour = "black", fill = "blue") +
+  scale_x_log10(labels = scales::comma) + #Changing to Log Scale
+  labs (#Axis Titles and Labels
+    x = "Log_Price",
+    y = "Frequency Density") +
+  ggtitle("Histogram to Show Log Price") +
+  theme_bw() +
+  geom_vline(aes(xintercept = mean(price)),col='red',size=2, alpha = 0.6)
+```
+
+*The above plots shows a histogram for the price of the properties one with logscale one without. It is clear from the first graph there is positively skewed distrubution, and by using the log scale it normalises it. This is better for regression models. In both plots we can use the mean to see the mean price is around £115.*
+
+## Plot 4: Density Plot to Show Review Rating
+```{r plot_4,message = FALSE, error = FALSE}
+#Plot 4
+ggplot(newlistings2, aes(x = review_scores_rating)) + #Plotting a density plot for Amenities
+  geom_density(aes(fill = "pink", alpha = 0.5)) +
+  labs (#Axis Titles and Labels
+    x = "Review Rating",
+    y = "Frequency Density") +
+  ggtitle("Density Plot to Show Review Rating") +
+  theme(legend.position = "none") +
+  theme_bw()
+```
+
+*This plot shows a great negative skew to the 5 star rating, i.e. the majority of ratings are 5. As the ratings are high, before doing any analysis i could hypothesis that this may mean reviews don't have much bearing on price because, the majority of reviews are 5 star, however not all the prices are high.*
+
+## Plot 5: Boxplot to Show Super Hosts to Price
+```{r plot_5,message = FALSE, error = FALSE}
+#Plot 5
+superhost <- newlistings3[c(4,15)] #removing NA's from superhost variable
+superhost1 <- na.omit(superhost)
+
+ggplot(superhost1, aes(x=price, y = host_is_superhost, fill = host_is_superhost)) + #Plotting a density plot for Amenities
+  geom_boxplot() +
+  scale_x_log10(labels = scales::comma) +
+  labs (#Axis Titles and Labels
+    x = "Price",
+    y = "Super Host") +
+  ggtitle("Boxplot to Show Super Hosts to Price") +
+  theme(legend.position = NULL) +
+  theme_bw()
+```
+
+*The boxplot shows super host to log price, cleary the mean price for the superhosts are greater than that of those who aren't. I would suggest this is because these hosts are seen to be superior and therefore can charge more, especially if this correlates with having more amenities, better response time etc. Surprisngly however the most expensive property is for someone without a superhost, but the superhosts have a greater minimum price because they know they can charge more for the property. The IQR and range is smaller for superhosts, this could be because they know how much they can charge, compared to normal hosts who may have less experience with airbnb.*
+
+## Plot 6: Correlation between each variables
+```{r plot_6,message = FALSE, error = FALSE}
+#Plot 6 
+scatterplot <- newlistings2[-c(1:3, #creating a new scatter plot df of variables that the full linear model found to be the most statistically significant.
+                               4:7,
+                               11:12,
+                               14:16,
+                               17:21,
+                               22:28,
+                               29:30,
+                               34
+                               )]
+GGally::ggpairs(scatterplot) # Running GG pairs to check relationships between variables
+```
+
+*Using ggpairs, We can see the correlations between variables. The greatest correlation is number of bedrooms and number the property sleeps. This is expected as the more rooms the more the property can sleep. The 2nd highest correlation is between review value and review location, this must be because there nicer the location the greater the review. This is expected, better locations better reviews. Correlations between availability and reviews are negatively correlated slightly. This suggest the more availability the worse the review, which makes sense. If the property is free more often this could be because it isn't the best property which would bring with it worse reviews. *
+
+*Accommodates, bathrooms, bedrooms, price, availability all have a positive skew, whilst reviews have a negative skew.*
+
+## Mapping 
+
+Visualisations of feature distributions and their relations are key to understanding a data set, and they can open up new lines of exploration. While we do not have time to go into all the wonderful geospatial visualisations one can do with R, you can use the following code to start with a map of your city, and overlay all AirBnB coordinates to get an overview of the spatial distribution of AirBnB rentals. For this visualisation we use the `leaflet` package, which includes a variety of tools for interactive maps, so you can easily zoom in-out, click on a point to get the actual AirBnB listing for that specific point, etc.
+
+The following code, having downloaded a dataframe `listings` with all AirbnB listings in Milan, will plot on the map all AirBnBs where `minimum_nights` is less than equal to four (4). You could learn more about `leaflet`, by following [the relevant Datacamp course on mapping with leaflet](https://www.datacamp.com/courses/interactive-maps-with-leaflet-in-r)
+
+
+```{r mapping, out.width = '80%'}
+
+leaflet(data = filter(listings, minimum_nights <= 4)) %>% 
+  addProviderTiles("OpenStreetMap.Mapnik") %>% 
+  addCircleMarkers(lng = ~longitude, 
+                   lat = ~latitude, 
+                   radius = 1, 
+                   fillColor = "blue", 
+                   fillOpacity = 0.4, 
+                   popup = ~listing_url,
+                   label = ~property_type)
+```
+
+
+# Regression Analysis
+
+## Split data into training and testing sets
+
+```{r data_split,message = FALSE, error = FALSE}
+library(rsample)
+
+set.seed(1234)
+
+# split the data into 2 parts
+## randomly 70% for model regression, 30% for estimation based on the final optimized model 
+newlistings3 <- initial_split(newlistings3, prop=0.70)
+airbnb_train <- training(newlistings3)
+airbnb_test <- testing(newlistings3)
+
+```
+
+## Skewness of "price_4_nights"
+
+```{r price4night_plot,message = FALSE, error = FALSE}
+# Distribution of "price_4_nights" in airbnb_test
+ggplot(airbnb_train,aes(x=price_4_nights))+
+  geom_density()+
+  labs (
+    x = "Price",
+    y = "Density") +
+  ggtitle("Distribution of price for 4 nights in airbnb_test") +
+  theme_bw()
+
+# Distribution of "log_price_4_nights" in airbnb_test
+ggplot(airbnb_train,aes(x=log_price_4_nights))+
+  geom_density()+
+  labs (
+    x = "Price",
+    y = "Density") +
+  ggtitle("Distribution of price for 4 nights calculated in log() in airbnb_test") +
+  theme_bw()
+
+```
+
+*We can see from the above graphs that the distribution is clearly left skewed. Hence, to normalize the distribution, we decided to log-transform the dependent variables to log_price_4_nights in our further model building.*
+
+
+## Model 1
+
+```{r model_1,message = FALSE, error = FALSE}
+# regression model with 3 explanatory variables: 
+## prop_type_simplified, number_of_reviews, review_scores_rating
+model1 <- lm(log_price_4_nights ~ Property_Type+number_of_reviews+review_scores_rating, data = airbnb_train)
+mosaic::msummary(model1)
+autoplot(model1)
+
+```
+
+
+*(log⁡("price_4_nights" )&=β_0+β_1×"Entire_Loft" +β_2×"Entire_Rental_Unit" +β_3×"Private_Room" @&"+ " β_4×"Other_Property_Type + " β_5×"Number_of_Reviews" +β_6×"Review_Score"*
+
+*1.1 Property Type: In our regression result, intercept exp⁡(β_0 )=exp⁡(6.0901)≈441.4656 indicates that price_4_nights will be 440 times higher for Entire_Condo when Number_of_Reviews and Review_Score equals zero. Although this intercept seems statistically significant given 95% confidence level, it is not very meaningful due to the conditions attached.*
+
+*exp⁡(β_1 )-1=exp⁡(.0121)-1≈0.0122. This means price_4_nights will be 1.22% higher for property type of Entire_Loft than for property type that is not Entire_Loft, holding all else equal. However, p_value of 0.781 suggests that this coefficient estimate is not statistically significant.*
+
+*〖1-exp〗⁡(β_2 )=1-exp⁡(.-1543)≈0.143. We expect that price_4_nights will be 14.3% lower for Entire_Rental_Unit than for property type that is not Entire_Rental_Unit, holding all else equal. This coefficient estimate is statistically significant at 95% confidence level, as p_value falls below 0.05.*
+
+*〖1-exp〗⁡(β_3 )=〖1-exp〗⁡(.8394)≈0.568. We expect that price_4_nights will be 56.8% lower for Private_Room than for property type that is not Private_Room, holding all else equal. This coefficient estimate is statistically significant at 95% confidence level, as p_value falls below 0.05.*
+
+*〖1-exp〗⁡(β_4 )=〖1-exp〗⁡(.1846)≈0.1686. We expect t¬hat price_4_nights will be 16.86% lower for Other_Property_Type than for property type that is not Other_Property_Type, holding all else equal. This coefficient estimate is statistically significant at 95% confidence level, as p_value falls below 0.05.*
+
+*1.2 Number of Reviews: exp⁡(β_5 )-1=exp⁡(.0001)-1≈0.0001. This means for every unit increase in Number_of_Reviews, price_4_nights will only increase by 1 basis point, holding all else equal. p_value of the coefficient estimate is lower than 0.05, therefore we can conclude that this is statistically significant at 95% confidence level. However, this estimate is not practically significant since 1 basis point increase in price is too small compared one unit increase in number of reviews, which are generally not a large number.*
+
+*1.3 Review Score Rating: exp⁡(β_6 )-1=exp⁡〖(.012)-1〗≈0.012. This means for every unit increase in Review_Score, price_4_nights will increase by 1.2%, holding all else equal. However, looking at p_value of the coefficient estimate, we can conclude that this is not statistically significant at 95% confidence level.*
+
+*1.4 Overall Model: From the F-stat we know the overall model is statistically significant at 95% confidence level and we conclude that model 1 fits the sample data better than the model without independent variables. In addition, adjusted R-squared of 0.22 suggests that only 22% of the data fits the model, which is considered very weak.*
+
+
+## Model 2
+
+```{r model_2,message = FALSE, error = FALSE}
+# regression model with 4 explanatory variables: 
+## prop_type_simplified, number_of_reviews, review_scores_rating, room_type
+model2 <- lm(log_price_4_nights ~ Property_Type+number_of_reviews+review_scores_rating+room_type, data = airbnb_train)
+mosaic::msummary(model2)
+
+autoplot(model2)
+
+
+```
+
+*(log⁡("price_4_nights" )&=β_0+β_1×"Entire_Loft" +β_2×"Entire_Rental_Unit" +β_3×"Private_Room" @&"+ " β_4×"Other_Property_Type + " β_5×"Number_of_Reviews" +β_6×"Review_Score" @&"+ " β_7×"Hotel+ " β_8×"Private+ " β_9×"Shared" *
+
+*2.1 Room Type: Intercept reflects is less interesting here as it requires Number_of_Reviews and Review_Score equals zero, which is not useful in reality. *
+
+*exp⁡〖(β_7 )-1〗=exp⁡(.2836)-1≈0.3279. This means price_4_nights will be 32.79% higher for room type of Hotel than for room type that is not Hotel, holding all else equal. This coefficient estimate is statistically significant at 95% confidence level, as p_value falls below 0.05.*
+
+*〖1-exp〗⁡(β_8 )=〖1-exp〗⁡(.6707)≈0.4886. We expect that price_4_nights will be 48.86% lower for room type of Private than for room type that is not Private, holding all else equal. This coefficient estimate is statistically significant at 95% confidence level, as p_value falls below 0.05.*
+
+*〖1-exp〗⁡(β_9 )=〖1-exp〗⁡(.8306)≈0.5642. We expect that price_4_nights will be 56.42% lower for room type of Shared than for room type that is not Shared, holding all else equal. This coefficient estimate is statistically significant at 95% confidence level, as p_value falls below 0.05.*
+
+*2.2 Overall Model: From the F-stat we know the overall model is statistically significant at 95% confidence level and we conclude that model 1 fits the sample data better than the model without independent variables. In addition, adjusted R-squared of 0.28 suggests that only 28% of the data fits the model, which is considered very weak, similar to the previous model. All three room types seems to be both statistically significant and practically significant, and we decide to incorporate these factors into our further model building.*
+
+
+
+## Model 3
+
+```{r model_3,message = FALSE, error = FALSE}
+# remove the 3 irrelevant variables
+new_airbnb_train <- airbnb_train %>% 
+  select(-price_4_nights, -price, -listing_url)
+
+# regression model with all variables: 
+model3 <- lm(log_price_4_nights ~ ., data = new_airbnb_train)
+mosaic::msummary(model3)
+
+```
+
+
+```{r model_3_vif,message = FALSE, error = FALSE}
+# check colinearity
+car::vif(model3)
+
+autoplot(model3)
+
+```
+
+*After running a VIF, we are able to determine which variables have a higher> 5, meaning that we found variables that are strongly correlated with each other.We will now remove the strongest correlated variables, including room_type, availability_60, review_scores_accuracy, review_scores_value, review_scores_rating*
+
+## Model 4
+
+```{r model_4,message = FALSE, error = FALSE}
+# create a new data set excluding several strongly correlated variables
+model_4_training<- new_airbnb_train %>% 
+  select(-room_type, -availability_60, -review_scores_accuracy, -review_scores_rating, -number_of_reviews_l30d, -number_of_reviews_ltm)
+
+# regression model with dataset model_4_training
+model4 <- lm(log_price_4_nights ~ ., data = model_4_training)
+mosaic::msummary(model4)
+
+
+```
+
+```{r model_4_vif,message = FALSE, error = FALSE}
+
+# check colinearity
+car::vif(model4)
+
+autoplot(model4)
+
+```
+*Interpretation Model 3&4: *
+
+*In Model 3, we have identified multiple variables that we considered could have a significant impact on the price. We ran a multivariate regression with 36 variables and log-transformed the dependent variable - price for four nights.*
+
+*At a 95% confidence level, only 18 variables are statistically significant and the rest have a p-value that is greater than 0.05. Therefore, even though certain variables such as Property_TypePrivate room in rental unit had especially high coefficients, we had to conclude that they were statistically insignificant. *
+
+*Out of the 18 statistically significant variables, 8 of them are dummy variables where a 0 or 1 has been assigned for a false or true value respectively. This applies to binary scenarios such as whether or not a host’s identity has been verified or if the bathroom is shared or not. For these variables, the percentage change in price is generally quite large at 20+ percent. Because these variables are binary, the true or false values are diametrically opposed and this translates into a huge qualitative difference for consumers. For example, having a shared room vs a private room, or shared bathroom vs private room will have a large difference on what consumers are willing to pay for accommodation.*
+
+*Conversely, for variables with a spectrum of possible values (such as amenities and accommodates) the percentage change in price is small (0.34% and 3.91% respectively). This is not to say that these factors are not as important to consumers as the binary ones listed above. Because these variables have a relatively large range, a change in accommodates from 1 to 10 will result in a price change of a similar magnitude to one of the binary variables.*
+
+*In addition to these variables, there were “hybrid” variables whose values were restricted. For example, minimum_nights only ranges from 1 to 4 and the various review_score variables only range from 1 to 5. Having explained the general types of variables in our dataset, there are certain particularly interesting variables. room_typeHotel room was the variable that had the biggest impact on price. *
+
+*exp⁡〖(β_r )-1〗=exp⁡(.0.2837)-1≈0.328.This indicates that price_4_nights will be 32.8% higher for listings that are hotel rooms versus those that are not. This may be the case because hotel rooms come with various amenities that allow the hotels to charge a higher price relati ve to an equivalent accommodation in a private apartment or house. Property_TypePrivate room in rental unit was also an interesting variable. While it had a higher coefficient than most other variables, its p-score was above 0.05 and it was therefore statistically insignificant.*
+
+*The interpretation of model 4 is roughly the same except that certain variables have been removed. These variables were ones that were strongly correlated with one another and were therefore influencing each other and not just the price. If these variables were not removed, the change on price would be compounded through certain variables. Removing these variables gives a truer picture of the variables that affect the price.*
+
+
+## Model 5
+
+```{r model_5,message = FALSE, error = FALSE}
+## host_is_superhostTRUE, host_identity_verifiedTRUE, accommodates, bathrooms_text, bedrooms, amenities, minimum_nights, availability_30, review_scores_cleanliness, 
+## review_scores_location, instant_bookableTRUE, shared_bathroomTRUE, prop_type_simplified, review_scores_value
+
+## regression model
+model5 <- lm(log_price_4_nights ~ host_is_superhost + host_identity_verified + accommodates + bathrooms_text + bedrooms + amenities + minimum_nights + availability_30 + review_scores_cleanliness + review_scores_location + instant_bookable + shared_bathroom + Property_Type + review_scores_value, data = model_4_training)
+
+mosaic::msummary(model5)
+
+
+```
+*(log⁡("price_4_nights" )&=β_0+β_1×"host_is_superhost" +β_2×"host_identity_verified" +β_3×"accommodates" @&"+ " β_4×number_of_"bathrooms + " β_5×"number_of_bedrooms" +β_6×"amenities" @&"+ " β_7×"minimum_nights+ " β_8×"availability_30+ " β_9×"revew_scores_cleanliness" @&"+ " β_10×"review_scores_location+ " β_11×"instant_bookable+ " β_12×"shared_bathroom" @&"+ " β_13×"entire_loft+ " β_14×"entire_rental_unit+ " β_15×"other_property" @&"+ " β_16×"private_room_in_rental_unit+ " β_17×"review_scores_value" *
+
+*First we check p_value for all explanatory variables and found that all are statistically significant at 95% confidence level as their p_value all fall below 0.05. *
+
+*Next we make the exponentiation transformation for all the coefficients to determine which ones are practically significant based on their value and feasible ranges. In our findings, cost of 4 nights will increase by more than 10% with one unit increase in number_of_bathroom, number_of_bedroom, review_scores_cleanliness, review_scores_location variables, and will also holds if the property type falls into entire_loft. Moreover, cost of 4 nights is expected to decrease by more than 10% if property type is entire_rental_unit or other_property, and more than 25% if it is shared_bathroom or its property type being private_room_in_rental_unit.*
+
+*Host profile predictors such as host_is_superhost, host_identity_verified variables seem to be less significant and have weaker effect on the costs of 4 nights, as compared to property related predictors.  *
+
+*Variables such as accommodates and availability_30, which are indictors for room size and short-term demand, seem to have very weak effect compared to other groups of predictors. *
+
+*Surprisingly, we have captured some unexpected result. For example, according to our regression result, it is expected that cost of 4 nights will decrease by more than 20% for every unit increase in review_scores_value. This could be due to the correlation between the different review scores variables, as both location and cleanliness scores contribute to the final overview scores. *
+
+
+
+```{r model_5_vif,message = FALSE, error = FALSE}
+# check colinearity
+car::vif(model5)
+autoplot(model5)
+
+```
+*Strong colinearity was not detected between variables after running the VIF *
+
+
+## Model Comparison
+
+1. Create a summary table, using `huxtable` (https://mfa2022.netlify.app/example/modelling_side_by_side_tables/) that shows which models you worked on, which predictors are significant, the adjusted $R^2$, and the Residual Standard Error.
+
+```{r model_comparsion,message = FALSE, error = FALSE}
+
+huxreg(model1, model2, model3, model4,model5,
+       statistics = c('#observations' = 'nobs', 
+                      'R squared' = 'r.squared', 
+                      'Adj. R Squared' = 'adj.r.squared', 
+                      'Residual SE' = 'sigma'), 
+#       bold_signif = 0.05, 
+       stars = NULL
+) %>% 
+  set_caption('Comparison of models')
+
+
+```
+
+
+*Overall, we find that model 5 is a relatively better model compared to the previous ones. The overall model is statistically significant according to F-stat and it has slightly better goodness of fit based on the adjusted R-square value, even with a reduced number of explanatory variables.  Model 5 yields the highest adjusted R-square value with fewer explanatory variables and more observations, thus reflecting highest model fit and accuracy.*
+
+## Forecasting 
+Suppose you are planning to visit the city you have been assigned to over reading week, and you want to stay in an Airbnb. Find Airbnb's in your destination city that are apartments with a private room, have at least 10 reviews, and an average rating of at least 90. Use your best model to predict the total cost to stay at this Airbnb for 4 nights. Include the appropriate 95% interval with your prediction. Report the point prediction and interval in terms of `price_4_nights`. 
+
+```{r forecasting,message = FALSE, error = FALSE}
+# Filter out the situation matched with the scenario
+# Run prediction on the airbnbn_test dataset
+airbnb_test1 <- airbnb_test %>% 
+  filter(number_of_reviews >= 10) %>% 
+  filter(review_scores_rating >=4.5) %>% 
+  filter(room_type =="Private room") %>% 
+  mutate(predictions =predict(model5,.))
+
+# Sift out one sample "https://www.airbnb.com/rooms/31372144"
+# Include appropriate 95% interval with prediction compared with the actual price for 4nights
+
+airbnb2 <- airbnb_test1 %>% 
+  filter(listing_url == "https://www.airbnb.com/rooms/31372144") %>% 
+  mutate(predicted_price = exp(predictions),
+            sd=sd(airbnb_train$log_price_4_nights),
+            count=4671, #total number of observations in airbnb_test
+            t_critical=qt(0.975,count-1),
+            se=sd/sqrt(count),
+            margin_of_error=t_critical*se) %>% 
+  summarise(listing_url,
+            predicted_price,
+            lower=exp(predictions-margin_of_error),
+            upper=exp(predictions+margin_of_error),
+            price_4_nights) %>% 
+  print()
+ 
+
+```
+
+*With our prediction model, we are 95% confident that cost of 4 nights for 2 people in Montreal is within (219,227) price range. Unfortunately the random sample was out of this range. This is reality (https://www.airbnb.com/rooms/31372144)*
+
+
+# Acknowledgements
+
+- The data for this project is from [insideairbnb.com](insideairbnb.com)

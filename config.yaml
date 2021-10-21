@@ -95,16 +95,16 @@ params:
         url: blogs/background
       - image: biography.jpg
         subtitle: Data Analytics
+        title: Project 1
+        url: blogs/hw1
+      - image: .jpg
+        subtitle: Data Analytics 
         title: Project 2
         url: blogs/hw2
       - image: .jpg
-        subtitle: 
-        title: 
-        url: blogs/
-      - image: .jpg
-        subtitle:
-        title: 
-        url: blogs/
+        subtitle: Data Analytics
+        title: Project 3
+        url: blogs/hw3
   two:
     buttonText: LinkedIn Profile
     enable: yes
